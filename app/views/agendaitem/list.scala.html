@@ -1,0 +1,30 @@
+@(agendaItems: List[(Int, String, String)])
+<div class="row">
+    <div class="col-md-12">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Event</th>
+                    <th>Agenda</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @for(agendaItem <- agendaItems) {
+                <tr>
+                    <td>@agendaItem._1</td>
+                    <td>@agendaItem._2</td>
+                    <td>@agendaItem._3</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a class="btn btn-sm btn-primary" href="@routes.AgendaItem.get(agendaItem._1)">Edit</a>
+                            <a class="btn btn-sm btn-danger" href="@routes.AgendaItem.remove(agendaItem._1)">Delete</a>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

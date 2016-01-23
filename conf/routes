@@ -1,0 +1,32 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.index
+GET     /scripts                    controllers.Application.scripts
+
+GET     /location                   controllers.Location.index
+GET     /location/:id               controllers.Location.get(id: Int)
+POST    /location                   controllers.Location.submit
+POST    /location/:id               controllers.Location.edit(id: Int)
+GET     /location/:id/delete        controllers.Location.remove(id: Int)
+
+GET     /eventtype                  controllers.EventType.index
+GET     /eventtype/:id              controllers.EventType.get(id: Int)
+POST    /eventtype                  controllers.EventType.submit
+GET     /eventtype/:id/delete       controllers.EventType.remove(id: Int)
+
+POST    /eventtype/:id/agenda       controllers.EventType.addagenda(id: Int)
+
+GET     /agendatype                 controllers.AgendaType.index
+POST    /agendatype                 controllers.AgendaType.submit
+
+GET     /agendaitem                 controllers.AgendaItem.index
+GET     /agendaitem/:id             controllers.AgendaItem.get(id: Int)
+POST    /agendaitem                 controllers.AgendaItem.submit
+POST    /agendaitem/:id             controllers.AgendaItem.edit(id: Int)
+GET     /agendaitem/:id/delete      controllers.AgendaItem.remove(id: Int)
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

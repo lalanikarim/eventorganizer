@@ -1,0 +1,45 @@
+@(eventType: models.EventType, agendaItems: List[(models.AgendaItem, models.AgendaType)])
+<div class="row">
+    <div class="col-md-4 col-sm-8">
+        <h4>Event Type</h4>
+        <form method="post" action="/eventtype/:id">
+            <div class="form-group">
+                <label>Id:</label>
+                <div>
+                    <span>@eventType.id</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Name:</label>
+                <div>
+                    <input class="form-control" name="name" value="@eventType.name">
+                </div>
+            </div>
+            <button class="btn btn-default" type="submit">Submit</button>
+        </form>
+    </div>
+    <div class="col-md-8 col-sm-4 hidden-xs"></div>
+</div>
+<div class="row">
+    <h4>Agenda</h4>
+    <div class="col-md-12">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @for((a,at) <- agendaItems) {
+            <tr>
+                <td>@a.id</td>
+                <td>@at.name</td>
+                <th></th>
+            </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
