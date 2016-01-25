@@ -22,7 +22,10 @@ GET     /eventtype/:id/:agendaTypeId/delete     controllers.EventType.removeagen
 GET     /eventtype/:id/:oldItemId/:newItemId    controllers.EventType.moveagendaitem(id: Int, oldItemId: Int, newItemId: Int)
 
 GET     /agendatype                 controllers.AgendaType.index
+GET     /agendatype/:id             controllers.AgendaType.get(id: Int)
 POST    /agendatype                 controllers.AgendaType.submit
+POST    /agendatype/:id             controllers.AgendaType.edit(id: Int)
+GET     /agendatype/:id/delete      controllers.AgendaType.remove(id: Int)
 
 GET     /agendaitem                 controllers.AgendaItem.index
 GET     /agendaitem/:id             controllers.AgendaItem.get(id: Int)

@@ -12,10 +12,51 @@ import scala.concurrent.Future
   */
 class AgendaType extends Controller {
   import models.Database.Agenda._
-  import models.DbConfig
+  import models.DbConfig.current.db
   import models.DbConfig.current.driver.api._
   def index = Action.async {
-    DbConfig.current.db.run(agendaTypesTable.result).map(agendaTypes => Ok(views.html.index("Agenda Types")(views.html.agendatype(agendaTypes.toList))))
+    db.run(agendaTypesTable.sortBy(_.id).result).map(
+      agendaTypes => Ok(
+        views.html.index("Agenda Types")(
+          views.html.aggregator(views.html.agendatype.list(agendaTypes.toList))(views.html.agendatype.add())
+        )
+      )
+    )
+  }
+
+  def get (id: Int) = Action.async { implicit request =>
+    val q = agendaTypesTable.filter(_.id === id).take(1)
+    db.run(q.result).map {
+      agendaTypes =>
+        if (agendaTypes.size > 0)
+          Ok(views.html.index("Agenda Type")(views.html.agendatype.edit(agendaTypes.head)))
+        else
+          NotFound
+    }
+  }
+
+  def edit (id: Int) = Action.async { implicit request =>
+    val form = Form (
+      single(
+        "name" -> text
+      )
+    )
+
+    form.bindFromRequest.fold(
+      hasErrors => Future successful BadRequest,
+      name => {
+        val q = for { a <- agendaTypesTable.filter(_.id === id)} yield a.name
+        db.run(q.update(name)).map {
+          r =>
+            Redirect("/agendatype")
+        } recover {
+          case e: Throwable => {
+            e.printStackTrace()
+            BadRequest
+          }
+        }
+      }
+    )
   }
 
   def submit = Action.async { implicit request =>
@@ -29,7 +70,7 @@ class AgendaType extends Controller {
       hasErrors => Future successful BadRequest,
       agendaType => {
 
-        DbConfig.current.db.run(agendaTypesTable += agendaType).map(_ => Redirect("/agendatype")) recover {
+        db.run(agendaTypesTable += agendaType).map(_ => Redirect("/agendatype")) recover {
           case e:Throwable => {
             e.printStackTrace()
             BadRequest
@@ -38,5 +79,17 @@ class AgendaType extends Controller {
 
       }
     )
+  }
+
+  def remove (id: Int) = Action.async { implicit request =>
+    db.run(agendaTypesTable.filter(_.id === id).delete).map {
+      r =>
+        Redirect("/agendatype")
+    } recover {
+      case e: Throwable => {
+        e.printStackTrace()
+        BadRequest
+      }
+    }
   }
 }
