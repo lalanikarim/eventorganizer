@@ -18,6 +18,8 @@ POST    /eventtype                  controllers.EventType.submit
 GET     /eventtype/:id/delete       controllers.EventType.remove(id: Int)
 
 POST    /eventtype/:id/agenda       controllers.EventType.addagenda(id: Int)
+GET     /eventtype/:id/:agendaTypeId/delete     controllers.EventType.removeagendaitem(id: Int, agendaTypeId: Int)
+GET     /eventtype/:id/:oldItemId/:newItemId    controllers.EventType.moveagendaitem(id: Int, oldItemId: Int, newItemId: Int)
 
 GET     /agendatype                 controllers.AgendaType.index
 POST    /agendatype                 controllers.AgendaType.submit

@@ -19,8 +19,11 @@ class AgendaItem extends Controller {
   def index = Action.async {
 
     val agendaItems = for {
-      ((ai,et),at) <- agendaItemsTable join eventTypesTable on (_.eventTypeId === _.id) join
-        agendaTypesTable on (_._1.agendaTypeId === _.id)
+      ((ai,et),at) <- (agendaItemsTable join eventTypesTable on (_.eventTypeId === _.id) join
+        agendaTypesTable on (_._1.agendaTypeId === _.id)).sortBy( p => {
+        val ((ai,et),at) = p
+        (et.id,ai.id)
+      })
     } yield {
       (ai.id,et.name,at.name)
     }
@@ -74,7 +77,7 @@ class AgendaItem extends Controller {
   def submit = Action.async { implicit request =>
     val form = Form(
       mapping(
-        "id" -> number,
+        "id" -> default(number,0),
         "eventTypeId" -> number,
         "agendaTypeId" -> number
       )(models.AgendaItem.apply)(models.AgendaItem.unapply))

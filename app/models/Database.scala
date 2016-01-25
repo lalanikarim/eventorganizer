@@ -41,7 +41,7 @@ object Database {
 
     class EventTypesTable(tag: Tag) extends Table[EventType](tag, "EVENTTYPES") {
 
-      def id = column[Int]("id", O.PrimaryKey)
+      def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
       def name = column[String]("name", O.SqlType("VARCHAR(25)"))
 
@@ -50,7 +50,7 @@ object Database {
 
     class EventsTable(tag: Tag) extends Table[Event](tag, "EVENTS") {
 
-      def id = column[Int]("int", O.PrimaryKey)
+      def id = column[Int]("int", O.PrimaryKey, O.AutoInc)
 
       def eventTypeId = column[Int]("eventTypeId")
 
@@ -62,9 +62,9 @@ object Database {
 
       def idx = index("idx", (eventTypeId, date, locationId), true)
 
-      def eventTypes = foreignKey("event_fk_eventTypeId", eventTypeId, eventTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def eventTypes = foreignKey("event_fk_eventTypeId", eventTypeId, eventTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def locations = foreignKey("event_fk_locationId", locationId, Locations.locationsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def locations = foreignKey("event_fk_locationId", locationId, Locations.locationsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def * = (id, eventTypeId, date, locationId, name) <>(Event.tupled, Event.unapply)
     }
@@ -78,7 +78,7 @@ object Database {
 
     class AgendaTypesTable(tag: Tag) extends Table[AgendaType](tag, "AGENDATYPES") {
 
-      def id = column[Int]("id", O.PrimaryKey)
+      def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
       def name = column[String]("name", O.SqlType("VARCHAR(25)"))
 
@@ -87,17 +87,17 @@ object Database {
 
     class AgendaItemsTable(tag: Tag) extends Table[AgendaItem](tag, "EVENTTYPEAGENDA") {
 
-      def id = column[Int]("id", O.PrimaryKey)
+      def id = column[Int]("id")
 
       def eventTypeId = column[Int]("eventTypeId")
 
       def agendaTypeId = column[Int]("agendaTypeId")
 
-      def eventTypes = foreignKey("fk_eventTypes", eventTypeId, Events.eventTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def eventTypes = foreignKey("fk_eventTypes", eventTypeId, Events.eventTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def idx = index("idx_agendaItems",(eventTypeId,agendaTypeId),true)
+      def pk = primaryKey("pk_agendaItem",(id, eventTypeId, agendaTypeId))
 
       def * = (id, eventTypeId, agendaTypeId) <>(AgendaItem.tupled, AgendaItem.unapply)
 
@@ -105,7 +105,7 @@ object Database {
 
     class EventAgendaItemsTable(tag: Tag) extends Table[EventAgendaItem](tag, "EVENTAGENDAITEMS") {
 
-      def id = column[Int]("id", O.PrimaryKey)
+      def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
       def eventId = column[Int]("eventId")
 
@@ -113,9 +113,9 @@ object Database {
 
       def notes = column[String]("notes")
 
-      def events = foreignKey("fk_events", eventId, Events.eventsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def events = foreignKey("fk_events", eventId, Events.eventsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)
+      def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def * = (id, eventId, agendaTypeId, notes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
     }

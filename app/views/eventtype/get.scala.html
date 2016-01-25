@@ -36,7 +36,21 @@
             <tr>
                 <td>@a.id</td>
                 <td>@at.name</td>
-                <th></th>
+                <th>
+                    @if(a.id > 1) {
+                    <a class="glyphicon glyphicon-menu-up" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id -1)"></a>
+                    } else {
+                    <span class="glyphicon glyphicon-minus"></span>
+                    }
+
+                    @if(a.id < agendaItems.reverse.head._1.id) {
+                    <a class="glyphicon glyphicon-menu-down" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id+ 1)"></a>
+                    } else {
+                    <span class="glyphicon glyphicon-minus"></span>
+                    }
+
+                    <a class="btn btn-danger btn-sm" href="@routes.EventType.removeagendaitem(eventType.id,a.id)">Delete</a>
+                </th>
             </tr>
             }
             </tbody>

@@ -56,7 +56,7 @@ class Location extends Controller {
   def submit = Action.async { implicit request =>
     val form = Form(
       mapping(
-      "id" -> number,
+      "id" -> default(number,0),
       "name" -> text
     )(models.Location.apply)(models.Location.unapply))
 
