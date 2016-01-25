@@ -1,0 +1,23 @@
+@(events: List[(models.Event,models.Location)])
+<div class="row">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Date</th>
+                <th>Name</th>
+                <th>Location</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for((event,location) <- events){
+            <tr>
+                <td>@event.id</td>
+                <td>@event.date</td>
+                <td>@event.name</td>
+                <td>@location.name</td>
+            </tr>
+            }
+        </tbody>
+    </table>
+</div>

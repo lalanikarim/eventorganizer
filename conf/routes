@@ -33,5 +33,8 @@ POST    /agendaitem                 controllers.AgendaItem.submit
 POST    /agendaitem/:id             controllers.AgendaItem.edit(id: Int)
 GET     /agendaitem/:id/delete      controllers.AgendaItem.remove(id: Int)
 
+GET     /event                      controllers.Event.index
+POST    /event                      controllers.Event.submit
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
