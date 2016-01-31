@@ -13,11 +13,15 @@ import play.api.Play.current
 case class Location(id: Int, name: String)
 
 case class EventType(id: Int, name: String)
+
+case class Contact(id: Int, name: String, groupId: String, notes: String)
+case class ContactPreference(contactId: Int, eventTypeId: Int, prefer: Boolean)
+
 case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int, name: String)
 
 case class AgendaType(id: Int, name: String)
 case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
-case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, notes: String)
+case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "", postnotes: String = "")
 
 object Database {
 
@@ -111,13 +115,15 @@ object Database {
 
       def agendaTypeId = column[Int]("agendaTypeId")
 
-      def notes = column[String]("notes")
+      def prenotes = column[String]("prenotes")
+
+      def postnotes = column[String]("postnotes")
 
       def events = foreignKey("fk_events", eventId, Events.eventsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def * = (id, eventId, agendaTypeId, notes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
+      def * = (id, eventId, agendaTypeId, prenotes, postnotes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
 
       def pk = primaryKey("pk_eventAgendaItems",(id,eventId))
     }

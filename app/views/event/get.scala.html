@@ -57,13 +57,13 @@
                 <td>@agendaItem.id</td>
                 <td>@name</td>
                 <td>
-                    @if(agendaItem.id < agendaItems.reverse.head._1.id) {
-                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id+1)" class="glyphicon glyphicon-menu-down"></a>
+                    @if(agendaItem.id > 1) {
+                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id-1)" class="glyphicon glyphicon-menu-up"></a>
                     } else {
                     <span class="glyphicon glyphicon-minus"></span>
                     }
-                    @if(agendaItem.id > 1) {
-                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id-1)" class="glyphicon glyphicon-menu-up"></a>
+                    @if(agendaItem.id < agendaItems.reverse.head._1.id) {
+                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id+1)" class="glyphicon glyphicon-menu-down"></a>
                     } else {
                     <span class="glyphicon glyphicon-minus"></span>
                     }

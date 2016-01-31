@@ -118,14 +118,17 @@ class EventType extends Controller {
   }
 
   def removeagendaitem (id: Int, agendaItemId: Int) = Action.async { implicit request =>
-    val d = for { a <- agendaItemsTable if (a.eventTypeId === id && a.id === agendaItemId)} yield a
-    val u = for { a <- agendaItemsTable if (a.eventTypeId === id && a.id > agendaItemId)} yield a
+    //val d = for { a <- agendaItemsTable if (a.eventTypeId === id && a.id === agendaItemId)} yield a
+    val u = for { aiq <- agendaItemsTable.filter(ai => ai.eventTypeId === id && ai.id >= agendaItemId).sortBy(_.id)} yield aiq
 
     (for {
-      del <- db.run(d.delete)
+      //del <- db.run(d.delete)
       update <- for(r <- db.stream(u.mutate.transactionally)) {
-        r.row = r.row.copy(id = r.row.id - 1)
-      } if del == 1
+        if (r.row.id == agendaItemId)
+          r.delete
+        else
+          r.row = r.row.copy(id = r.row.id - 1)
+      } //if del == 1
     } yield {
       Redirect("/eventtype/" + id.toString)
     }) recover {

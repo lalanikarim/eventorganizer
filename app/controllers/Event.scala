@@ -57,16 +57,22 @@ class Event extends Controller {
       agendaTypesTable on (_.agendaTypeId === _.id)).sortBy(_._1.id) } yield (ea,at.name)
     val etq = eventTypesTable.sortBy(_.id)
     val lq = locationsTable.sortBy(_.id)
+    val atq = for { at <- agendaTypesTable.sortBy(_.id)} yield at
 
     (for {
       e <- db.run(eq.result)
       ai <- db.run(aiq.result)
       et <- db.run(etq.result)
       l <- db.run(lq.result)
+      at <- db.run(atq.result)
       if e.length > 0
     } yield {
       Ok(views.html.index("Event")(
-        views.html.event.get(e.head,ai,et,l)
+        views.html.aggregator(
+          views.html.event.get(e.head,ai,et,l)
+        )(
+          views.html.event.addagenda(e.head.id,at)
+        )
       ))
     }) recover {
       case e:Throwable => {
@@ -101,7 +107,7 @@ class Event extends Controller {
             val result = ((Seq[models.EventAgendaItem](), 1) /: atl) (
               (sc, at) => {
                 val (s,c) = sc
-                (s :+ models.EventAgendaItem(c, eventId.toInt, at.agendaTypeId, ""), c + 1)
+                (s :+ models.EventAgendaItem(c, eventId.toInt, at.agendaTypeId), c + 1)
               }
             )
             result._1
@@ -138,19 +144,34 @@ class Event extends Controller {
       )
     )
 
-
-    Future successful Ok
+    form.bindFromRequest.fold(
+      hasErrors => Future successful BadRequest,
+      agendaTypeId => (
+        for {
+          c <- db.run(eventAgendaItemsTable.filter(_.eventId === id).length.result)
+          i <- db.run(eventAgendaItemsTable += models.EventAgendaItem(c + 1,id,agendaTypeId))
+        } yield {
+          Redirect("/event/" + id)
+        }) recover {
+        case e:Throwable => {
+          e.printStackTrace()
+          BadRequest
+        }
+      }
+    )
   }
 
   def removeagenda (id: Int, agendaItemId: Int) = Action.async { implicit request =>
-    val q1 = for { eai <- eventAgendaItemsTable.filter(ea => ea.eventId === id && ea.id === agendaItemId)} yield eai
-    val q2 = for { eai <- eventAgendaItemsTable.filter(ea => ea.eventId === id && ea.id > agendaItemId)} yield eai
+    val q = for { eai <- eventAgendaItemsTable.filter(ea => ea.eventId === id && ea.id >= agendaItemId).sortBy(_.id)} yield eai
 
     (for {
-      del <- db.run(q1.delete)
-      update <- for (r <- db.stream(q2.mutate.transactionally)) {
-        r.row = r.row.copy(id = r.row.id - 1)
-      } if del == 1
+      //del <- db.run(q1.delete)
+      update <- for (r <- db.stream(q.mutate.transactionally)) {
+        if (r.row.id == agendaItemId)
+          r.delete
+        else
+          r.row = r.row.copy(id = r.row.id - 1)
+      }
     } yield {
       Redirect("/event/" + id)
     }) recover {
