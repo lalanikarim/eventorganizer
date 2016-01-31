@@ -105,7 +105,7 @@ object Database {
 
     class EventAgendaItemsTable(tag: Tag) extends Table[EventAgendaItem](tag, "EVENTAGENDAITEMS") {
 
-      def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
+      def id = column[Int]("id")
 
       def eventId = column[Int]("eventId")
 
@@ -118,6 +118,8 @@ object Database {
       def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def * = (id, eventId, agendaTypeId, notes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
+
+      def pk = primaryKey("pk_eventAgendaItems",(id,eventId))
     }
 
     val agendaTypesTable = TableQuery[AgendaTypesTable]

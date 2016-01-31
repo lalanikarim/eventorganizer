@@ -1,4 +1,4 @@
-@(events: List[(models.Event,models.Location)])
+@(events: Seq[(models.Event,models.Location, Int)])
 <div class="row">
     <table class="table">
         <thead>
@@ -7,15 +7,24 @@
                 <th>Date</th>
                 <th>Name</th>
                 <th>Location</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @for((event,location) <- events){
+            @for((event,location, count) <- events){
             <tr>
                 <td>@event.id</td>
                 <td>@event.date</td>
                 <td>@event.name</td>
                 <td>@location.name</td>
+                <td>
+                    <div class="btn-group" role="group">
+                        <a href="@routes.Event.get(event.id)" class="btn btn-primary btn-sm">Edit</a>
+                        @if(count == 0){
+                        <a href="@routes.Event.remove(event.id)" class="btn btn-danger btn-sm">Delete</a>
+                        }
+                    </div>
+                </td>
             </tr>
             }
         </tbody>

@@ -124,10 +124,8 @@ class EventType extends Controller {
     (for {
       del <- db.run(d.delete)
       update <- for(r <- db.stream(u.mutate.transactionally)) {
-        println(del)
         r.row = r.row.copy(id = r.row.id - 1)
-      }
-
+      } if del == 1
     } yield {
       Redirect("/eventtype/" + id.toString)
     }) recover {
