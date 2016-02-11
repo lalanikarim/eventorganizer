@@ -1,4 +1,4 @@
-@(agendaType: models.AgendaType)
+@(agendaType: models.AgendaType, agendaTypes: Seq[models.AgendaType])
 <div class="row">
     <div class="col-md-4 col-sm-8">
         <h4>Edit Agenda Type</h4>
@@ -8,6 +8,19 @@
             </div>
             <div class="form-group">
                 <label>Name:</label><input class="form-control" name="name" value="@agendaType.name">
+            </div>
+            <div class="form-group">
+                <label>Category:</label>
+                <select class="form-control" name="parent">
+                    <option></option>
+                    @for(at <- agendaTypes){
+                    <option value="@at.id"
+                    @if(at.id == agendaType.parent.getOrElse(-1)){
+                            checked
+                    }
+                    >@at.name</option>
+                    }
+                </select>
             </div>
             <button class="btn btn-default" type="submit">Submit</button>
         </form>

@@ -1,4 +1,4 @@
-@(agendaTypes: List[models.AgendaType])
+@(agendaTypes: Seq[models.AgendaType])
 <div class="row">
     <div class="col-md-12">
         <table class="table">
@@ -6,6 +6,7 @@
                 <tr>
                     <th>Id</th>
                     <th>Name</th>
+                    <th>Category</th>
                     <th></th>
                 </tr>
             </thead>
@@ -14,6 +15,11 @@
                 <tr>
                     <td>@agendaType.id</td>
                     <td>@agendaType.name</td>
+                    <td>@{
+                        agendaType.parent.map{id =>
+                            (Some("") /:agendaTypes){(n,at) =>
+                                if(at.id == id) Some(at.name) else n
+                            }}.getOrElse(Some("")).getOrElse("")}</td>
                     <td>
                         <div class="btn-group" role="group">
                             <a class="btn btn-primary btn-sm" href="@routes.AgendaType.get(agendaType.id)">Edit</a>

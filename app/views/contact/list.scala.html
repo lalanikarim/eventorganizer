@@ -1,0 +1,45 @@
+@(contacts: Seq[(models.Contact,Boolean,Boolean)])
+<div class="row">
+    <h4>Contacts</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Group Id</th>
+                <th>Preference?</th>
+                <th>History?</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @for((contact, hasPrefs, hasHistory) <- contacts){
+            <tr>
+                <td>@contact.id</td>
+                <td>@contact.givenName @contact.lastName</td>
+                <td>@contact.groupId</td>
+                <td>
+                    @if(hasPrefs){
+                    <span class="glyphicon glyphicon-ok"></span>
+                    } else {
+                    <span class="glyphicon glyphicon-remove"></span>
+                    }
+                </td>
+                <td>
+                    @if(hasHistory){
+                    <span class="glyphicon glyphicon-ok"></span>
+                    } else {
+                    <span class="glyphicon glyphicon-remove"></span>
+                    }
+                </td>
+                <th>
+                    <div class="btn-group" role="group">
+                        <a href="@routes.Contact.get(contact.id)" class="btn btn-primary btn-sm">View</a>
+                        <a href="@routes.Contact.remove(contact.id)" class="btn btn-danger btn-sm">Delete</a>
+                    </div>
+                </th>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

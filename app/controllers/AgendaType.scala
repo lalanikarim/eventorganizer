@@ -18,7 +18,7 @@ class AgendaType extends Controller {
     db.run(agendaTypesTable.sortBy(_.id).result).map(
       agendaTypes => Ok(
         views.html.index("Agenda Types")(
-          views.html.aggregator(views.html.agendatype.list(agendaTypes.toList))(views.html.agendatype.add())
+          views.html.aggregator(views.html.agendatype.list(agendaTypes))(views.html.agendatype.add(agendaTypes))
         )
       )
     )
@@ -63,7 +63,8 @@ class AgendaType extends Controller {
     val form = Form(
       mapping(
         "id" -> default(number,0),
-        "name" -> text
+        "name" -> text,
+        "parent" -> optional(number)
       )(models.AgendaType.apply)(models.AgendaType.unapply))
 
     form.bindFromRequest.fold(

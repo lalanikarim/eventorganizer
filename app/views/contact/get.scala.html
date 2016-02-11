@@ -1,0 +1,26 @@
+@(contact: models.Contact)
+<div class="col-md-4 col-sm-8">
+    <h4>Edit Contact</h4>
+    <form class="form" method="post" action="/contact/@contact.id">
+        <div class="form-group">
+            <label>Id</label><span>@contact.id</span>
+        </div>
+        <div class="form-group">
+            <label>Given Name</label>
+            <input class="form-control" name="givenName" value="@contact.givenName">
+        </div>
+        <div class="form-group">
+            <label>Last Name</label>
+            <input class="form-control" name="lastName" value="@contact.lastName">
+        </div>
+        <div class="form-group">
+            <label>Group Id</label>
+            <input class="form-control" name="groupId" value="@contact.groupId">
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea class="form-control" name="notes">@contact.notes</textarea>
+        </div>
+        <button class="btn btn-default" type="submit">Submit</button>
+    </form>
+</div>

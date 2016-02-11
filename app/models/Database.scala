@@ -5,6 +5,7 @@ import slick.driver.JdbcProfile
 import slick.driver.JdbcDriver
 import slick.lifted.ProvenShape
 import play.api.Play.current
+import slick.profile.SqlProfile.ColumnOption.SqlType
 
 /**
   * Created by karim on 1/20/16.
@@ -14,14 +15,15 @@ case class Location(id: Int, name: String)
 
 case class EventType(id: Int, name: String)
 
-case class Contact(id: Int, name: String, groupId: String, notes: String)
-case class ContactPreference(contactId: Int, eventTypeId: Int, prefer: Boolean)
+case class Contact(id: Int, givenName: String, lastName: String, groupId: Option[String], notes: Option[String])
+case class ContactPreference(contactId: Int, agendaTypeId: Int, prefer: Boolean)
 
 case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int, name: String)
 
-case class AgendaType(id: Int, name: String)
+case class AgendaType(id: Int, name: String, parent: Option[Int])
 case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
-case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "", postnotes: String = "")
+case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "",
+                           contactId: Option[Int] = None, postnotes: String = "")
 
 object Database {
 
@@ -78,6 +80,44 @@ object Database {
 
   }
 
+  object Contacts {
+
+    class ContactsTable(tag: Tag) extends Table[Contact](tag, "CONTACTS") {
+
+      def id = column[Int]("id",O.PrimaryKey, O.AutoInc)
+
+      def givenName = column[String]("givenName",O.SqlType("VARCHAR(50)"))
+
+      def lastName = column[String]("lastName",O.SqlType("VARCHAR(50)"))
+
+      def groupId = column[Option[String]]("groupId",O.SqlType("VARCHAR(50)"))
+
+      def notes = column[Option[String]]("notes")
+
+      def * = (id, givenName, lastName, groupId, notes) <> (Contact.tupled, Contact.unapply)
+    }
+
+    class ContactPreferencesTable(tag: Tag) extends Table[ContactPreference](tag, "CONTACTPREFERENCES") {
+
+      def contactId = column[Int]("columnId")
+
+      def agendaTypeId = column[Int]("agendaTypeId")
+
+      def prefer = column[Boolean]("prefer")
+
+      def contacts = foreignKey("fk_cpContacts", contactId, contactsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def agendaTypes = foreignKey("fk_cpAgendaTypes", agendaTypeId, Agenda.agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def * = (contactId, agendaTypeId, prefer) <> (ContactPreference.tupled, ContactPreference.unapply)
+
+      def pk = primaryKey("pk_contactPreferences", (contactId, agendaTypeId))
+    }
+
+    val contactsTable = TableQuery[ContactsTable]
+    val contactPreferencesTable = TableQuery[ContactPreferencesTable]
+  }
+
   object Agenda {
 
     class AgendaTypesTable(tag: Tag) extends Table[AgendaType](tag, "AGENDATYPES") {
@@ -86,7 +126,11 @@ object Database {
 
       def name = column[String]("name", O.SqlType("VARCHAR(25)"))
 
-      def * = (id, name) <>(AgendaType.tupled, AgendaType.unapply)
+      def parent = column[Option[Int]]("parent")
+
+      def agendaParents = foreignKey("fk_agendaTypeParent", parent, agendaTypesTable)(_.id?, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def * = (id, name, parent) <>(AgendaType.tupled, AgendaType.unapply)
     }
 
     class AgendaItemsTable(tag: Tag) extends Table[AgendaItem](tag, "EVENTTYPEAGENDA") {
@@ -117,13 +161,17 @@ object Database {
 
       def prenotes = column[String]("prenotes")
 
+      def contactId = column[Option[Int]]("contactId",O.Default(None))
+
       def postnotes = column[String]("postnotes")
 
       def events = foreignKey("fk_events", eventId, Events.eventsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def * = (id, eventId, agendaTypeId, prenotes, postnotes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
+      def contacts = foreignKey("fk_eaiContacts", contactId, Contacts.contactsTable)(_.id?, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def * = (id, eventId, agendaTypeId, prenotes, contactId, postnotes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
 
       def pk = primaryKey("pk_eventAgendaItems",(id,eventId))
     }
@@ -131,7 +179,6 @@ object Database {
     val agendaTypesTable = TableQuery[AgendaTypesTable]
     val agendaItemsTable = TableQuery[AgendaItemsTable]
     val eventAgendaItemsTable = TableQuery[EventAgendaItemsTable]
-
   }
 
 }

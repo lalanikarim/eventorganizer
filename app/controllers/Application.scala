@@ -26,9 +26,11 @@ class Application extends Controller {
     import Events._
     import Agenda._
     import Locations._
+    import Contacts._
 
     val schema = locationsTable.schema ++ eventTypesTable.schema ++ eventsTable.schema ++
-      agendaTypesTable.schema ++ agendaItemsTable.schema ++ eventAgendaItemsTable.schema
+      agendaTypesTable.schema ++ agendaItemsTable.schema ++ contactsTable.schema ++
+      contactPreferencesTable.schema ++ eventAgendaItemsTable.schema
 
     def combine(first: String, iString: Iterable[String]) = (("\n" + first + "\n") /: iString)((c,s) => c + s + ";\n");
 

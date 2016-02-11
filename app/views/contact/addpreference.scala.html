@@ -1,0 +1,45 @@
+@(contactId: Int, prefYes: Seq[Int], prefNo: Seq[Int], agendaTypes: Seq[models.AgendaType])
+<div class="row">
+    <h4>Preferences</h4>
+    <form method="post" action="@routes.Contact.addpreference(contactId)">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Agenda Type</th>
+                    <th>Yes</th>
+                    <th>No</th>
+                    <th>N/A</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for(idx <- agendaTypes.indices){
+                <tr>
+                    <td>@agendaTypes(idx).name</td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@idx]" value="@{ "yes-" + agendaTypes(idx).id}" @if(prefYes.contains(agendaTypes(idx).id)){
+                               checked
+                               } >
+                    </td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@idx]" value="@{ "no-" + agendaTypes(idx).id }" @if(prefNo.contains(agendaTypes(idx).id)){
+                               checked
+                               }>
+                    </td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@idx]" value="@{ "na-" + agendaTypes(idx).id }" @if(!prefNo.contains(agendaTypes(idx).id) && !prefYes.contains(agendaTypes(idx).id)){
+                               checked
+                               }>
+                    </td>
+                </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3">
+                        <button class="btn btn-default" type="submit">Submit</button>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </form>
+</div>
