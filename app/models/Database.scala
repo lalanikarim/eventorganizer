@@ -131,6 +131,7 @@ object Database {
       def agendaParents = foreignKey("fk_agendaTypeParent", parent, agendaTypesTable)(_.id?, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def * = (id, name, parent) <>(AgendaType.tupled, AgendaType.unapply)
+
     }
 
     class AgendaItemsTable(tag: Tag) extends Table[AgendaItem](tag, "EVENTTYPEAGENDA") {

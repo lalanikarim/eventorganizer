@@ -16,7 +16,7 @@
                     @for(at <- agendaTypes){
                     <option value="@at.id"
                     @if(at.id == agendaType.parent.getOrElse(-1)){
-                            checked
+                            selected
                     }
                     >@at.name</option>
                     }

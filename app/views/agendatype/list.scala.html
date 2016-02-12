@@ -15,11 +15,11 @@
                 <tr>
                     <td>@agendaType.id</td>
                     <td>@agendaType.name</td>
-                    <td>@{
+                    <td><i>@{
                         agendaType.parent.map{id =>
                             (Some("") /:agendaTypes){(n,at) =>
                                 if(at.id == id) Some(at.name) else n
-                            }}.getOrElse(Some("")).getOrElse("")}</td>
+                            }}.getOrElse(Some("")).getOrElse("")}</i></td>
                     <td>
                         <div class="btn-group" role="group">
                             <a class="btn btn-primary btn-sm" href="@routes.AgendaType.get(agendaType.id)">Edit</a>

@@ -1,4 +1,4 @@
-@(contactId: Int, prefYes: Seq[Int], prefNo: Seq[Int], agendaTypes: Seq[models.AgendaType])
+@(contactId: Int, prefYes: Seq[Int], prefNo: Seq[Int], agendaTypes: Seq[(models.AgendaType, Seq[models.AgendaType])])
 <div class="row">
     <h4>Preferences</h4>
     <form method="post" action="@routes.Contact.addpreference(contactId)">
@@ -14,23 +14,43 @@
             <tbody>
                 @for(idx <- agendaTypes.indices){
                 <tr>
-                    <td>@agendaTypes(idx).name</td>
+                    <th>@agendaTypes(idx)._1.name</th>
                     <td>
-                        <input type="radio" name="agendaTypes[@idx]" value="@{ "yes-" + agendaTypes(idx).id}" @if(prefYes.contains(agendaTypes(idx).id)){
+                        <input type="radio" name="agendaTypes[@{idx + 1}]" value="@{ "yes-" + agendaTypes(idx)._1.id}" @if(prefYes.contains(agendaTypes(idx)._1.id)){
                                checked
                                } >
                     </td>
                     <td>
-                        <input type="radio" name="agendaTypes[@idx]" value="@{ "no-" + agendaTypes(idx).id }" @if(prefNo.contains(agendaTypes(idx).id)){
+                        <input type="radio" name="agendaTypes[@{idx + 1}]" value="@{ "no-" + agendaTypes(idx)._1.id }" @if(prefNo.contains(agendaTypes(idx)._1.id)){
                                checked
                                }>
                     </td>
                     <td>
-                        <input type="radio" name="agendaTypes[@idx]" value="@{ "na-" + agendaTypes(idx).id }" @if(!prefNo.contains(agendaTypes(idx).id) && !prefYes.contains(agendaTypes(idx).id)){
+                        <input type="radio" name="agendaTypes[@{idx + 1}]" value="@{ "na-" + agendaTypes(idx)._1.id }" @if(!prefNo.contains(agendaTypes(idx)._1.id) && !prefYes.contains(agendaTypes(idx)._1.id)){
                                checked
                                }>
                     </td>
                 </tr>
+                @for(jdx <- agendaTypes(idx)._2.indices){
+                <tr>
+                    <td><label class="col-md-1"></label> @agendaTypes(idx)._2(jdx).name</td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@{(idx + 1) * 100 + jdx}]" value="@{ "yes-" + agendaTypes(idx)._2(jdx).id}" @if(prefYes.contains(agendaTypes(idx)._2(jdx).id)){
+                        checked
+                        } >
+                    </td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@{(idx + 1) * 100 + jdx}]" value="@{ "no-" + agendaTypes(idx)._2(jdx).id }" @if(prefNo.contains(agendaTypes(idx)._2(jdx).id)){
+                        checked
+                        }>
+                    </td>
+                    <td>
+                        <input type="radio" name="agendaTypes[@{(idx + 1) * 100 + jdx}]" value="@{ "na-" + agendaTypes(idx)._2(jdx).id }" @if(!prefNo.contains(agendaTypes(idx)._2(jdx).id) && !prefYes.contains(agendaTypes(idx)._2(jdx).id)){
+                        checked
+                        }>
+                    </td>
+                </tr>
+                }
                 }
             </tbody>
             <tfoot>

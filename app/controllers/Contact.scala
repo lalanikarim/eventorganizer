@@ -75,14 +75,33 @@ class Contact extends Controller {
       prefNo <- db.run(cpnq.result)
       agendaTypes <- db.run(agendaTypesTable.sortBy(_.id).result)
     } yield {
-      if (contacts.length > 0)
+      if (contacts.length > 0) {
+        val (parents, children) = ((Seq[models.AgendaType](),Seq[models.AgendaType]()) /: agendaTypes){(pc,at) =>
+          val (p,c) = pc
+          if (at.parent.isEmpty)
+            (p :+ at,c)
+          else
+            (p,c :+ at)
+        }
+
+        val agendaTypesTup = (parents.map(_ -> Seq[models.AgendaType]()) /: children){(c,at) =>
+          c.map { pt =>
+            val (p,t) = pt
+            if (at.parent.getOrElse(-1) == p.id)
+              (p, t :+ at)
+            else
+              pt
+          }
+        }
+
         Ok(views.html.index("Contact")(
           views.html.aggregator(
             views.html.contact.get(contacts.head)
           )(
-            views.html.contact.addpreference(contacts.head.id,prefYes, prefNo, agendaTypes)
+            views.html.contact.addpreference(contacts.head.id, prefYes, prefNo, agendaTypesTup)
           )
         ))
+      }
       else
         BadRequest
 
