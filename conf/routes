@@ -42,6 +42,8 @@ POST    /event/:id/agenda           controllers.Event.addagenda(id: Int)
 GET     /event/:id/:agendaItemId/delete         controllers.Event.removeagenda(id: Int, agendaItemId: Int)
 GET     /event/:id/:oldItemId/:newItemId        controllers.Event.moveagenda(id: Int, oldItemId: Int, newItemId: Int)
 
+GET     /event/:id/assignments      controllers.Event.assignments(id: Int)
+
 GET     /contact                    controllers.Contact.index
 GET     /contact/:id                controllers.Contact.get(id: Int)
 POST    /contact                    controllers.Contact.submit

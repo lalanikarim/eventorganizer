@@ -16,6 +16,7 @@ class Event extends Controller {
   import models.Database.Locations._
   import models.Database.Events._
   import models.Database.Agenda._
+  import models.Database.Contacts._
   import models.DbConfig.current.db
   import models.DbConfig.current.driver.api._
 
@@ -190,6 +191,69 @@ class Event extends Controller {
     db.run(q1.update(-oldItemId).andThen(q2.update(oldItemId)).andThen(q3.update(newItemId))).map {
       _ => Redirect("/event/" + id)
     } recover {
+      case e:Throwable => {
+        e.printStackTrace()
+        BadRequest
+      }
+    }
+  }
+
+  def assignments (id: Int) = Action.async { implicit request =>
+    val eq = for {
+      (e, et) <- eventsTable.filter(_.id === id) join eventTypesTable on (_.eventTypeId === _.id)
+    } yield (e, et)
+
+    val aiq = for {
+      ((ea,at),c) <- (eventAgendaItemsTable.filter(_.eventId === id) join
+                  agendaTypesTable on (_.agendaTypeId === _.id) joinLeft
+                  contactsTable on {(e,c) =>
+                    val (ea,ai) = e
+                    ea.contactId === c.id
+                  }) sortBy {r =>
+                  val ((ea,at),c) = r
+                    ea.agendaTypeId
+                  }
+    } yield (ea,at,c)
+
+    val cpq = for {
+      (ca, c) <-   (contactPreferencesTable join
+                        agendaTypesTable on (_.agendaTypeId === _.id) joinRight
+                        contactsTable on (_._1.contactId === _.id)).sortBy{r =>
+        val (ca,c) = r
+        (c.givenName, c.lastName)
+      }
+    } yield (c,ca)
+
+    (for {
+      e <- db.run(eq.result)
+      ai <- db.run(aiq.result)
+      cp <- db.run(cpq.result)
+    } yield {
+      val allContacts = (Seq[models.Contact]() /: cp){(s,i) =>
+        val (c,ca) = i
+        if (s contains c)
+          s
+        else
+          s :+ c
+      }
+
+      val seqc = allContacts.map { c =>
+        (c, (Seq[(models.ContactPreference,models.AgendaType)]() /: cp){(s,i) =>
+          val (ci,ocpa) = i
+
+          if (c == ci && ocpa.isDefined)
+            s :+ ocpa.get
+          else
+            s
+
+        })
+      }
+
+      if (e.length > 0)
+        Ok(views.html.index("Event Assignments")(views.html.event.assignments(e.head._1,e.head._2,ai,seqc)))
+      else
+        NotFound
+    }) recover {
       case e:Throwable => {
         e.printStackTrace()
         BadRequest

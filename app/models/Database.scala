@@ -15,7 +15,23 @@ case class Location(id: Int, name: String)
 
 case class EventType(id: Int, name: String)
 
-case class Contact(id: Int, givenName: String, lastName: String, groupId: Option[String], notes: Option[String])
+case class Contact(id: Int, givenName: String, lastName: String,
+                   groupId: Option[String], sex: Option[String],
+                   category: Option[String],
+                   notes: Option[String])
+
+object ContactAttr {
+  object Type {
+    val student = "r"
+    val adult = "a"
+    val senior = "s"
+  }
+  object Gender {
+    val male = "m"
+    val female = "f"
+  }
+}
+
 case class ContactPreference(contactId: Int, agendaTypeId: Int, prefer: Boolean)
 
 case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int, name: String)
@@ -92,9 +108,13 @@ object Database {
 
       def groupId = column[Option[String]]("groupId",O.SqlType("VARCHAR(50)"))
 
+      def sex = column[Option[String]]("sex",O.SqlType("CHAR(1)"))
+
+      def category = column[Option[String]]("category", O.SqlType("CHAR(1)"))
+
       def notes = column[Option[String]]("notes")
 
-      def * = (id, givenName, lastName, groupId, notes) <> (Contact.tupled, Contact.unapply)
+      def * = (id, givenName, lastName, groupId, sex, category, notes) <> (Contact.tupled, Contact.unapply)
     }
 
     class ContactPreferencesTable(tag: Tag) extends Table[ContactPreference](tag, "CONTACTPREFERENCES") {

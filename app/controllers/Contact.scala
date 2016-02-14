@@ -4,6 +4,7 @@ import java.sql.DriverAction
 import javassist.tools.web.BadHttpRequest
 
 import play.api.data._
+import play.api.data.validation.Constraints._
 import play.api.data.Forms._
 import play.api.mvc.{Action, Controller}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -146,14 +147,19 @@ class Contact extends Controller {
       tuple(
         "givenName" -> text,
         "lastName" -> text,
-        "groupId" -> optional(text)
+        "sex" -> optional(text verifying pattern("""[mfMF]""".r, error="""Invalid value for parameter sex""")),
+        "category" -> optional(text verifying pattern("""[rasRAS]""".r, error="""Invalid value for parameter category""")),
+        "groupId" -> optional(text),
+        "notes" -> optional(text)
       )
     )
 
     form.bindFromRequest.fold(
-      hasErrors => Future successful BadRequest,
+      hasErrors => Future successful BadRequest("Failed to parse form"),
       contact => {
-        (db.run(contactsTable += models.Contact(0, contact._1, contact._2, contact._3, None)).map {
+        val (givenName, lastName, sex, category, groupId, notes) = contact
+        (db.run(contactsTable += models.Contact(0, givenName, lastName, groupId, sex.map(_.toLowerCase),
+          category.map(_.toLowerCase), notes)).map {
           _ => Redirect("/contact")
         }) recover {
           case e: Throwable => {
@@ -214,5 +220,65 @@ class Contact extends Controller {
         }
       }
     )
+  }
+
+  def recenthistory (id: Int) = Action.async { implicit request =>
+    val chq = for {
+      c <- eventAgendaItemsTable join agendaTypesTable on
+        (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
+          val (ea,at) = eai
+          e.id === ea.eventId
+        } join contactsTable.filter(_.id === id) on { (eai,c) =>
+          val ((ea,at),e) = eai
+          c.id === ea.contactId
+        } sortBy { r =>
+          val (((ea,at),e),c) = r
+          (e.date.desc,e.name,at.name)
+        } take 20
+    } yield {
+      c
+    }
+
+    Future successful Ok
+  }
+
+  def historyforeventtype (id: Int, eventTypeId: Int) = Action.async { implicit request =>
+    val chq = for {
+      c <- eventAgendaItemsTable join agendaTypesTable on
+        (_.agendaTypeId === _.id) join eventsTable.filter(_.eventTypeId === eventTypeId) on { (eai,e) =>
+        val (ea,at) = eai
+        e.id === ea.eventId
+      } join contactsTable.filter(_.id === id) on { (eai,c) =>
+        val ((ea,at),e) = eai
+        c.id === ea.contactId
+      } sortBy { r =>
+        val (((ea,at),e),c) = r
+        (e.date.desc,e.name,at.name)
+      } take 20
+    } yield {
+      c
+    }
+
+    Future successful Ok
+  }
+
+  def historyforagendatype (id: Int, agendaTypeId: Int) = Action.async { implicit request =>
+    val chq = for {
+      c <- eventAgendaItemsTable join agendaTypesTable.filter(_.id === agendaTypeId) on
+        (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
+        val (ea,at) = eai
+        e.id === ea.eventId
+      } join contactsTable.filter(_.id === id) on { (eai,c) =>
+        val ((ea,at),e) = eai
+        c.id === ea.contactId
+      } sortBy { r =>
+        val (((ea,at),e),c) = r
+        (e.date.desc,e.name,at.name)
+      } take 20
+    } yield {
+      c
+    }
+
+    Future successful Ok
   }
 }

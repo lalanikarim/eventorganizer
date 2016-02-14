@@ -6,7 +6,7 @@ create unique index "idx" on "EVENTS" ("eventTypeId","date","locationId");
 create table "AGENDATYPES" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(25) NOT NULL,"parent" INTEGER);
 create table "EVENTTYPEAGENDA" ("id" INTEGER NOT NULL,"eventTypeId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL);
 alter table "EVENTTYPEAGENDA" add constraint "pk_agendaItem" primary key("id","eventTypeId","agendaTypeId");
-create table "CONTACTS" ("id" SERIAL NOT NULL PRIMARY KEY,"givenName" VARCHAR(50) NOT NULL,"lastName" VARCHAR(50) NOT NULL,"groupId" VARCHAR(50),"notes" VARCHAR);
+create table "CONTACTS" ("id" SERIAL NOT NULL PRIMARY KEY,"givenName" VARCHAR(50) NOT NULL,"lastName" VARCHAR(50) NOT NULL,"groupId" VARCHAR(50),"sex" CHAR(1),"category" CHAR(1),"notes" VARCHAR);
 create table "CONTACTPREFERENCES" ("columnId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL,"prefer" BOOLEAN NOT NULL);
 alter table "CONTACTPREFERENCES" add constraint "pk_contactPreferences" primary key("columnId","agendaTypeId");
 create table "EVENTAGENDAITEMS" ("id" INTEGER NOT NULL,"eventId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL,"prenotes" VARCHAR NOT NULL,"contactId" INTEGER DEFAULT null,"postnotes" VARCHAR NOT NULL);
