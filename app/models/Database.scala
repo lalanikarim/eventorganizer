@@ -32,9 +32,16 @@ object ContactAttr {
   }
 }
 
+object EventAttr {
+  object State {
+    var open = 0
+    var closed = 1
+  }
+}
+
 case class ContactPreference(contactId: Int, agendaTypeId: Int, prefer: Boolean)
 
-case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int, name: String)
+case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int, name: String, state: Int)
 
 case class AgendaType(id: Int, name: String, parent: Option[Int])
 case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
@@ -72,7 +79,7 @@ object Database {
 
     class EventsTable(tag: Tag) extends Table[Event](tag, "EVENTS") {
 
-      def id = column[Int]("int", O.PrimaryKey, O.AutoInc)
+      def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
 
       def eventTypeId = column[Int]("eventTypeId")
 
@@ -82,13 +89,15 @@ object Database {
 
       def name = column[String]("name", O.SqlType("VARCHAR(50)"))
 
+      def state = column[Int]("state", O.Default(0))
+
       def idx = index("idx", (eventTypeId, date, locationId), true)
 
       def eventTypes = foreignKey("event_fk_eventTypeId", eventTypeId, eventTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def locations = foreignKey("event_fk_locationId", locationId, Locations.locationsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def * = (id, eventTypeId, date, locationId, name) <>(Event.tupled, Event.unapply)
+      def * = (id, eventTypeId, date, locationId, name, state) <>(Event.tupled, Event.unapply)
     }
 
     val eventTypesTable = TableQuery[EventTypesTable]

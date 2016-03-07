@@ -1,7 +1,7 @@
 # --- !Ups
 create table "LOCATIONS" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(25) NOT NULL);
 create table "EVENTTYPES" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(25) NOT NULL);
-create table "EVENTS" ("int" SERIAL NOT NULL PRIMARY KEY,"eventTypeId" INTEGER NOT NULL,"date" DATE NOT NULL,"locationId" INTEGER NOT NULL,"name" VARCHAR(50) NOT NULL);
+create table "EVENTS" ("id" SERIAL NOT NULL PRIMARY KEY,"eventTypeId" INTEGER NOT NULL,"date" DATE NOT NULL,"locationId" INTEGER NOT NULL,"name" VARCHAR(50) NOT NULL);
 create unique index "idx" on "EVENTS" ("eventTypeId","date","locationId");
 create table "AGENDATYPES" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(25) NOT NULL,"parent" INTEGER);
 create table "EVENTTYPEAGENDA" ("id" INTEGER NOT NULL,"eventTypeId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL);
@@ -20,7 +20,7 @@ alter table "CONTACTPREFERENCES" add constraint "fk_cpAgendaTypes" foreign key("
 alter table "CONTACTPREFERENCES" add constraint "fk_cpContacts" foreign key("columnId") references "CONTACTS"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTAGENDAITEMS" add constraint "fk_agendaTypes" foreign key("agendaTypeId") references "AGENDATYPES"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTAGENDAITEMS" add constraint "fk_eaiContacts" foreign key("contactId") references "CONTACTS"("id") on update CASCADE on delete RESTRICT;
-alter table "EVENTAGENDAITEMS" add constraint "fk_events" foreign key("eventId") references "EVENTS"("int") on update CASCADE on delete RESTRICT;
+alter table "EVENTAGENDAITEMS" add constraint "fk_events" foreign key("eventId") references "EVENTS"("id") on update CASCADE on delete RESTRICT;
 
 # --- !Downs
 alter table "EVENTAGENDAITEMS" drop constraint "fk_agendaTypes";

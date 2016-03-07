@@ -1,7 +1,7 @@
 @(event: models.Event, agendaItems: Seq[(models.EventAgendaItem,String)], eventTypes: Seq[models.EventType], locations: Seq[models.Location])
 <div class="row">
     <div class="col-md-4 col-sm-8">
-        <h4>Edit Event</h4>
+        <h4>Edit Event <a class="btn btn-primary btn-sm pull-right" href="@routes.Event.assignments(event.id)">Assignments</a> </h4>
         <form method="post" action="/event/@{event.id}">
             <div class="form-group">
                 <label>Id:</label><span>@event.id</span>

@@ -17,7 +17,7 @@ class Location extends Controller {
 
   def index = Action.async {
     db.run(locationsTable.result).map(locations => Ok(views.html.index("Location")(
-      views.html.aggregator(views.html.location.list(locations.toList))(views.html.location.add())))
+      views.html.aggregator(Seq(views.html.location.list(locations.toList),views.html.location.add()))))
     )
   }
 

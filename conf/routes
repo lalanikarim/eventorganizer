@@ -36,13 +36,18 @@ GET     /agendaitem/:id/delete      controllers.AgendaItem.remove(id: Int)
 GET     /event                      controllers.Event.index
 GET     /event/:id                  controllers.Event.get(id: Int)
 POST    /event                      controllers.Event.submit
+POST    /event/:id                  controllers.Event.edit(id: Int)
 GET     /event/:id/delete           controllers.Event.remove(id: Int)
+
+GET     /event/:id/assignments      controllers.Event.assignments(id: Int)
+GET     /event/:id/assignments/:eventAgendaItemId       controllers.Event.getassignments(id: Int, eventAgendaItemId: Int, search: Option[String])
+GET     /event/:id/assign/:eaiId/:contactId             controllers.Event.assign(id: Int, eaiId: Int, contactId: Int)
+GET     /event/:id/unassign/:agendaItemId               controllers.Event.unassign(id: Int, agendaItemId: Int)
 
 POST    /event/:id/agenda           controllers.Event.addagenda(id: Int)
 GET     /event/:id/:agendaItemId/delete         controllers.Event.removeagenda(id: Int, agendaItemId: Int)
 GET     /event/:id/:oldItemId/:newItemId        controllers.Event.moveagenda(id: Int, oldItemId: Int, newItemId: Int)
 
-GET     /event/:id/assignments      controllers.Event.assignments(id: Int)
 
 GET     /contact                    controllers.Contact.index
 GET     /contact/:id                controllers.Contact.get(id: Int)

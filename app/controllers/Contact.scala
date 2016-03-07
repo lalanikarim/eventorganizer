@@ -51,11 +51,11 @@ class Contact extends Controller {
       }
 
       Ok(views.html.index("Contacts")(
-        views.html.aggregator(
-          views.html.contact.list(result))(
+        views.html.aggregator(Seq(
+          views.html.contact.list(result),
           views.html.contact.add())
         )
-      )
+      ))
     }
   }
 
@@ -75,6 +75,7 @@ class Contact extends Controller {
       prefYes <- db.run(cpyq.result)
       prefNo <- db.run(cpnq.result)
       agendaTypes <- db.run(agendaTypesTable.sortBy(_.id).result)
+      history <- recenthistory(id)
     } yield {
       if (contacts.length > 0) {
         val (parents, children) = ((Seq[models.AgendaType](),Seq[models.AgendaType]()) /: agendaTypes){(pc,at) =>
@@ -96,11 +97,11 @@ class Contact extends Controller {
         }
 
         Ok(views.html.index("Contact")(
-          views.html.aggregator(
-            views.html.contact.get(contacts.head)
-          )(
+          views.html.aggregator(Seq(
+            views.html.contact.get(contacts.head),
+            views.html.contact.history(history),
             views.html.contact.addpreference(contacts.head.id, prefYes, prefNo, agendaTypesTup)
-          )
+          ))
         ))
       }
       else
@@ -160,7 +161,7 @@ class Contact extends Controller {
         val (givenName, lastName, sex, category, groupId, notes) = contact
         (db.run(contactsTable += models.Contact(0, givenName, lastName, groupId, sex.map(_.toLowerCase),
           category.map(_.toLowerCase), notes)).map {
-          _ => Redirect("/contact")
+          _ =>  Redirect(request.headers.get("referer").getOrElse("/contact"))
         }) recover {
           case e: Throwable => {
             e.printStackTrace()
@@ -222,9 +223,9 @@ class Contact extends Controller {
     )
   }
 
-  def recenthistory (id: Int) = Action.async { implicit request =>
+  def recenthistory (id: Int) = {
     val chq = for {
-      c <- eventAgendaItemsTable join agendaTypesTable on
+      (((eai,at),e),c) <- eventAgendaItemsTable join agendaTypesTable on
         (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
           val (ea,at) = eai
           e.id === ea.eventId
@@ -236,10 +237,10 @@ class Contact extends Controller {
           (e.date.desc,e.name,at.name)
         } take 20
     } yield {
-      c
+      (e.date,e.name,at.name,eai.postnotes)
     }
 
-    Future successful Ok
+    db.run(chq.result)
   }
 
   def historyforeventtype (id: Int, eventTypeId: Int) = Action.async { implicit request =>

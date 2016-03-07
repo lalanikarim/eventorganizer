@@ -1,7 +1,56 @@
 @(event: models.Event, eventType: models.EventType,
-    agendaItems: Seq[(models.EventAgendaItem,models.AgendaType,Option[models.Contact])],
-    contacts: Seq[(models.Contact,Seq[(models.ContactPreference, models.AgendaType)])]
-)
+    agendaItems: Seq[(models.EventAgendaItem,models.AgendaType,Option[models.Contact])])
 <div class="col-md-12">
+    <h4>Event Assignments</h4>
+    <div>
+        <dl class="dl-horizontal">
+            <dt>Event</dt>
+            <dd><a href="@routes.Event.get(event.id)">@event.name</a></dd>
+            <dt>Date</dt>
+            <dd>@event.date</dd>
+            <dt>Event Type</dt>
+            <dd>@eventType.name</dd>
+        </dl>
+    </div>
+    <div class="col-md-6">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Id</th>
+                <th>Agenda</th>
+                <th>Pre Notes</th>
+                <th>Assignee</th>
+                @if(event.state == models.EventAttr.State.closed){
+                <th>Post Notes</th>
+                }
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @for((ai,at,optc) <- agendaItems){
+            <tr>
+                <td>@ai.id</td>
+                <td>@at.name</td>
+                <td>@ai.prenotes</td>
+                <td>
+                    @optc.map(o => o.givenName + " " + o.lastName).getOrElse("")
+                </td>
+                @if(event.state == models.EventAttr.State.closed){
+                <td>@ai.postnotes</td>
+                }
+                <td>
+                    @if(event.state == models.EventAttr.State.open){
+                        <a class="btn btn-primary btn-sm" href="@routes.Event.getassignments(event.id, ai.id,None)">@if(optc.isDefined){
+                            Change
+                            } else {
+                            Assign
+                            }</a>
 
+                    }
+                </td>
+            </tr>
+            }
+            </tbody>
+        </table>
+    </div>
 </div>

@@ -1,3 +1,4 @@
-@(content1: Html)(content2: Html)
-@content1
-@content2
+@(seqContent: Seq[Html])
+@for(content <- seqContent){
+    @content
+}

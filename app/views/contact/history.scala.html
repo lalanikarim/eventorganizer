@@ -1,0 +1,26 @@
+@(history: Seq[(java.sql.Date,String,String,String)])
+<div class="col-md-8">
+    <h4>History</h4>
+    <div class="row">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Event Type</th>
+                <th>Agenda Type</th>
+                <th>Notes</th>
+            </tr>
+            </thead>
+            <tbody>
+            @for((date,eventType,agendaType,notes) <- history){
+            <tr>
+                <td>@date</td>
+                <td>@eventType</td>
+                <td>@agendaType</td>
+                <td>@notes</td>
+            </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>

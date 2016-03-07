@@ -1,5 +1,5 @@
 @(contactId: Int, prefYes: Seq[Int], prefNo: Seq[Int], agendaTypes: Seq[(models.AgendaType, Seq[models.AgendaType])])
-<div class="row">
+<div class="col-md-12">
     <h4>Preferences</h4>
     <form method="post" action="@routes.Contact.addpreference(contactId)">
         <table class="table">

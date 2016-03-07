@@ -22,7 +22,7 @@ class EventType extends Controller {
   def index = Action.async {
     db.run(eventTypesTable.sortBy(_.id).result).map(eventTypes =>
       Ok(views.html.index("Event Types")(
-        views.html.aggregator(views.html.eventtype.list(eventTypes.toList))(views.html.eventtype.add()))
+        views.html.aggregator(Seq(views.html.eventtype.list(eventTypes.toList),views.html.eventtype.add())))
       )
     )
   }
@@ -46,10 +46,10 @@ class EventType extends Controller {
         val (e, a, at) = r
         if (e.size > 0)
           Ok(views.html.index("Event Type")(
-            views.html.aggregator(
-              views.html.eventtype.get(e.head,a.toList))(
+            views.html.aggregator(Seq(
+              views.html.eventtype.get(e.head,a.toList),
               views.html.eventtype.addagenda(id,at.toList)))
-          )
+          ))
         else
           NotFound
     } recover {

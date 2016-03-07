@@ -1,6 +1,7 @@
 package controllers
 
-import java.sql.Date
+import java.sql.{SQLType, Date}
+import java.util
 
 import play.api.data.Forms._
 import play.api.data._
@@ -44,10 +45,10 @@ class Event extends Controller {
 
     } yield {
       Ok(views.html.index("Events")(
-        views.html.aggregator(
-          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0)))))(
+        views.html.aggregator(Seq(
+          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0)))),
           views.html.event.add(eventTypes.toList, locations.toList)
-        )
+        ))
       ))
     }
   }
@@ -69,11 +70,10 @@ class Event extends Controller {
       if e.length > 0
     } yield {
       Ok(views.html.index("Event")(
-        views.html.aggregator(
-          views.html.event.get(e.head,ai,et,l)
-        )(
+        views.html.aggregator(Seq(
+          views.html.event.get(e.head,ai,et,l),
           views.html.event.addagenda(e.head.id,at)
-        )
+        ))
       ))
     }) recover {
       case e:Throwable => {
@@ -103,7 +103,7 @@ class Event extends Controller {
         (for {
           etl <- db.run(etq.result)
           atl <- db.run(atq.result)
-          eventId <- db.run((eventsTable returning eventsTable.map(_.id)) += models.Event(0,eventTypeId, sqlDate,locationId,etl.head))
+          eventId <- db.run((eventsTable returning eventsTable.map(_.id)) += models.Event(0,eventTypeId, sqlDate,locationId,etl.head,models.EventAttr.State.open))
           r <- db.run(eventAgendaItemsTable ++= {
             val result = ((Seq[models.EventAgendaItem](), 1) /: atl) (
               (sc, at) => {
@@ -116,6 +116,38 @@ class Event extends Controller {
           ) if eventId > 0
         } yield {
           Redirect("/event")
+        }) recover {
+          case e:Throwable => {
+            e.printStackTrace()
+            BadRequest
+          }
+        }
+      }
+    )
+  }
+
+  def edit (id: Int) = Action.async { implicit request =>
+    val form = Form(
+      tuple(
+        "name" -> text,
+        "date" -> date("MM-dd-yyyy"),
+        "eventTypeId" -> number,
+        "locationId" -> number
+      )
+    )
+
+    form.bindFromRequest.fold(
+      hasErrors => {
+        println(hasErrors)
+        Future successful BadRequest},
+      eventForm => {
+        val (name, date, eventTypeId, locationId) = eventForm
+        val sqlDate = new Date(date.getTime)
+
+        val eq = for { e <- eventsTable.filter(_.id === id)} yield (e.name, e.date, e.eventTypeId, e.locationId)
+
+        (db.run(eq.update(name, sqlDate,eventTypeId,locationId)).map {
+          _ => Redirect(routes.Event.get(id).absoluteURL())
         }) recover {
           case e:Throwable => {
             e.printStackTrace()
@@ -203,56 +235,131 @@ class Event extends Controller {
       (e, et) <- eventsTable.filter(_.id === id) join eventTypesTable on (_.eventTypeId === _.id)
     } yield (e, et)
 
-    val aiq = for {
+    val aiq = (for {
       ((ea,at),c) <- (eventAgendaItemsTable.filter(_.eventId === id) join
                   agendaTypesTable on (_.agendaTypeId === _.id) joinLeft
                   contactsTable on {(e,c) =>
                     val (ea,ai) = e
                     ea.contactId === c.id
-                  }) sortBy {r =>
-                  val ((ea,at),c) = r
-                    ea.agendaTypeId
-                  }
-    } yield (ea,at,c)
-
-    val cpq = for {
-      (ca, c) <-   (contactPreferencesTable join
-                        agendaTypesTable on (_.agendaTypeId === _.id) joinRight
-                        contactsTable on (_._1.contactId === _.id)).sortBy{r =>
-        val (ca,c) = r
-        (c.givenName, c.lastName)
-      }
-    } yield (c,ca)
+                  })
+    } yield (ea,at,c)).sortBy(_._1.id)
 
     (for {
       e <- db.run(eq.result)
       ai <- db.run(aiq.result)
-      cp <- db.run(cpq.result)
     } yield {
-      val allContacts = (Seq[models.Contact]() /: cp){(s,i) =>
-        val (c,ca) = i
-        if (s contains c)
-          s
-        else
-          s :+ c
-      }
-
-      val seqc = allContacts.map { c =>
-        (c, (Seq[(models.ContactPreference,models.AgendaType)]() /: cp){(s,i) =>
-          val (ci,ocpa) = i
-
-          if (c == ci && ocpa.isDefined)
-            s :+ ocpa.get
-          else
-            s
-
-        })
-      }
-
       if (e.length > 0)
-        Ok(views.html.index("Event Assignments")(views.html.event.assignments(e.head._1,e.head._2,ai,seqc)))
+        Ok(views.html.index("Event Assignments")(views.html.event.assignments(e.head._1,e.head._2,ai)))
       else
         NotFound
+    }) recover {
+      case e:Throwable => {
+        e.printStackTrace()
+        BadRequest
+      }
+    }
+  }
+
+  def getassignments(id: Int, eventAgendaItemId: Int, search: Option[String]) = Action.async { implicit request =>
+
+    val age = SimpleFunction.unary[Date,String]("age")
+    val currentDate = SimpleLiteral[Date]("CURRENT_DATE")
+
+    val now = new util.Date()
+    val sqlNow = new Date(now.getTime)
+
+
+    val eq = for { e <- eventsTable.filter(_.id === id) } yield e
+    val eaq = for { (eai,at) <- eventAgendaItemsTable.filter(eai =>
+      eai.id === eventAgendaItemId && eai.eventId === id) join
+      agendaTypesTable on (_.agendaTypeId === _.id) } yield (eai,at)
+
+    val cpq = (for { (cp,ea) <- contactPreferencesTable join eaq on {(cp,ea) =>
+      val (eai,at) = ea
+      cp.agendaTypeId === at.id || cp.agendaTypeId === at.parent.getOrElse(at.id)}} yield (cp.contactId, cp.prefer)).distinct
+
+    val historySelf = (for {
+      ((c,h),e) <- contactsTable join eventAgendaItemsTable on (_.id === _.contactId) join eventsTable on (_._2.eventId === _.id)
+    } yield (c.id -> e.date)
+    ) groupBy(_._1) map {
+      case (cid,agg) => (cid -> agg.map(_._2).max.map(d => age(d)))
+    }
+
+    val historyGroup = (for {
+      (((c1,h),e),c) <- contactsTable join
+        eventAgendaItemsTable on (_.id === _.contactId) join
+        eventsTable on (_._2.eventId === _.id) join
+        contactsTable on ((h,c) => h._1._1.id =!= c.id && h._1._1.groupId === c.groupId)
+    } yield (c.id -> e.date)
+      ) groupBy(_._1) map {
+      case (cid,agg) => (cid -> agg.map(_._2).max.map(d => age(d)))
+    }
+
+    val cq = (for {
+      (((c,cp),hs),hg) <- (search match {
+        case Some(term) => contactsTable.filter(c =>
+          c.givenName.toLowerCase.startsWith(term.toLowerCase) ||
+          c.lastName.toLowerCase.startsWith(term.toLowerCase) ||
+          c.groupId.toLowerCase.startsWith(term.toLowerCase)
+        )
+        case None => contactsTable
+      }) joinLeft
+      cpq on (_.id === _._1) joinLeft
+      historySelf on (_._1.id === _._1) joinLeft
+      historyGroup on (_._1._1.id === _._1)
+    } yield (c,hs.map(_._2) ,hg.map(_._2), cp.map(_._2))) sortBy {r =>
+      val (c,hs,hg,cp) = r
+      c.givenName -> c.lastName
+    }
+
+    (for {
+      e <- db.run(eq.result)
+      ea <- db.run(eaq.result)
+      c <- db.run(cq.result)
+    } yield {
+      if (e.size > 0 && ea.size > 0){
+        val (eai, at) = ea.head
+
+        def flatten(ooStr: Option[Option[String]]) = ooStr.map(_.getOrElse("")).getOrElse("")
+        def clean(str: String) = str match {
+          case "00:00:00" => "Today"
+          case _ => str
+        }
+
+        val cFlat = c map { item =>
+          val (contact, hs, hg, cp) = item
+          (contact,clean(flatten(hs)),clean(flatten(hg)),cp)
+        }
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head,eai,at,cFlat),views.html.contact.add()))))
+      } else {
+        NotFound
+      }
+    }) recover {
+      case e:Throwable => {
+        e.printStackTrace()
+        BadRequest
+      }
+    }
+  }
+
+  def assign(id: Int, eaiId: Int, contactId: Int) = Action.async { implicit request =>
+    val aq = for { eai <- eventAgendaItemsTable.filter(eai => eai.eventId === id && eai.id === eaiId) } yield eai.contactId
+
+    (db.run(aq.update(Some(contactId))).map {
+      _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
+    }) recover {
+      case e:Throwable => {
+        e.printStackTrace()
+        BadRequest
+      }
+    }
+  }
+
+  def unassign(id: Int, eaiId: Int) = Action.async { implicit request =>
+    val aq = for { eai <- eventAgendaItemsTable.filter(eai => eai.eventId === id && eai.id === eaiId) } yield eai.contactId
+
+    (db.run(aq.update(None)).map {
+      _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
     }) recover {
       case e:Throwable => {
         e.printStackTrace()

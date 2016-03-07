@@ -1,0 +1,68 @@
+@(event: models.Event, eventAgendaItem: models.EventAgendaItem,
+    agendaType: models.AgendaType, contacts: Seq[(models.Contact,String,String,Option[Boolean])])
+<div class="col-md-8 col-sm-12">
+    <h4>Choose Assignment</h4>
+    <dl class="dl-horizontal">
+        <dt>Event</dt>
+        <dd><a href="@routes.Event.assignments(event.id)">@event.name</a></dd>
+        <dt>Date</dt>
+        <dd>@event.date</dd>
+        <dt>Assignment</dt>
+        <dd>@agendaType.name</dd>
+    </dl>
+    <div class="input-group col-md-4">
+        <input id="txtSearch" type="text" class="form-control" placeholder="Search for...">
+      <span class="input-group-btn">
+        <button class="btn btn-default" type="button" onclick="var search = $('#txtSearch').val();window.location='@routes.Event.getassignments(event.id,eventAgendaItem.id,None)?search=' + search">Go!</button>
+      </span>
+        <script type="text/javascript">
+            document.getElementById('txtSearch').value = getParameterByName('search');
+        </script>
+    </div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>
+
+            </th>
+            <th>Prefer</th>
+            <th>Last Assignment<br/>Self</th>
+            <th>Last Assignment<br/>From Group</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @for((contact,lastassignself,lastassigngroup, optPref) <- contacts){
+        <tr>
+            <td><a href="@routes.Contact.get(contact.id)">@contact.givenName @contact.lastName</a></td>
+            <td>
+            @if(optPref.isDefined){
+                @if(optPref.get){
+                <span class="glyphicon glyphicon-ok text-success"></span>
+                } else {
+                <span class="glyphicon glyphicon-remove text-danger"></span>
+                }
+            }
+            </td>
+            <td>
+                @lastassignself
+            </td>
+            <td>
+                @lastassigngroup
+            </td>
+            <td>
+                @if(eventAgendaItem.contactId.isDefined){
+                @if(eventAgendaItem.contactId.get != contact.id) {
+                <a class="btn btn-danger btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Ressign</a>
+                } else {
+                <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(event.id,eventAgendaItem.id)">Clear</a>
+                }
+                } else {
+                <a class="btn btn-primary btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Assign</a>
+                }
+            </td>
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>

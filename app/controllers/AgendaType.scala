@@ -18,13 +18,13 @@ class AgendaType extends Controller {
     db.run(agendaTypesTable.sortBy(_.id).result).map(
       agendaTypes => Ok(
         views.html.index("Agenda Types")(
-          views.html.aggregator(views.html.agendatype.list(agendaTypes))(
+          views.html.aggregator(Seq(views.html.agendatype.list(agendaTypes),
             views.html.agendatype.add(
               (Seq[models.AgendaType]() /: agendaTypes){(c,at) =>
                 if (at.parent.isEmpty) c :+ at else c
               }
             )
-          )
+          ))
         )
       )
     )

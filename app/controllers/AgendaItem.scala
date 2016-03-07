@@ -33,7 +33,7 @@ class AgendaItem extends Controller {
       eventTypes <- db.run(eventTypesTable.result)
       agendaTypes <- db.run(agendaTypesTable.result)
     } yield {
-      Ok(views.html.index("Agenda Items")(views.html.aggregator(views.html.agendaitem.list(items.toList))(views.html.agendaitem.add(eventTypes.toList, agendaTypes.toList))))
+      Ok(views.html.index("Agenda Items")(views.html.aggregator(Seq(views.html.agendaitem.list(items.toList),views.html.agendaitem.add(eventTypes.toList, agendaTypes.toList)))))
     }
   }
 
