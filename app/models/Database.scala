@@ -128,7 +128,7 @@ object Database {
 
     class ContactPreferencesTable(tag: Tag) extends Table[ContactPreference](tag, "CONTACTPREFERENCES") {
 
-      def contactId = column[Int]("columnId")
+      def contactId = column[Int]("contactId")
 
       def agendaTypeId = column[Int]("agendaTypeId")
 

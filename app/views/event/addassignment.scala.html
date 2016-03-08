@@ -1,12 +1,12 @@
-@(event: models.Event, eventAgendaItem: models.EventAgendaItem,
-    agendaType: models.AgendaType, contacts: Seq[(models.Contact,String,String,Option[Boolean])])
+@(event: models.Event, eventDays:String, eventAgendaItem: models.EventAgendaItem,
+    agendaType: models.AgendaType, contacts: Seq[(models.Contact,String,String,String,Option[Boolean])])
 <div class="col-md-8 col-sm-12">
     <h4>Choose Assignment</h4>
     <dl class="dl-horizontal">
         <dt>Event</dt>
         <dd><a href="@routes.Event.assignments(event.id)">@event.name</a></dd>
         <dt>Date</dt>
-        <dd>@event.date</dd>
+        <dd>@event.date (@eventDays)</dd>
         <dt>Assignment</dt>
         <dd>@agendaType.name</dd>
     </dl>
@@ -32,7 +32,7 @@
         </tr>
         </thead>
         <tbody>
-        @for((contact,lastassignself,lastassigngroup, optPref) <- contacts){
+        @for((contact,hs,hsat,hg, optPref) <- contacts){
         <tr>
             <td><a href="@routes.Contact.get(contact.id)">@contact.givenName @contact.lastName</a></td>
             <td>
@@ -45,10 +45,10 @@
             }
             </td>
             <td>
-                @lastassignself
+                @hs<br/>@hsat
             </td>
             <td>
-                @lastassigngroup
+                @hg
             </td>
             <td>
                 @if(eventAgendaItem.contactId.isDefined){

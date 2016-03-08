@@ -7,8 +7,8 @@ create table "AGENDATYPES" ("id" SERIAL NOT NULL PRIMARY KEY,"name" VARCHAR(25) 
 create table "EVENTTYPEAGENDA" ("id" INTEGER NOT NULL,"eventTypeId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL);
 alter table "EVENTTYPEAGENDA" add constraint "pk_agendaItem" primary key("id","eventTypeId","agendaTypeId");
 create table "CONTACTS" ("id" SERIAL NOT NULL PRIMARY KEY,"givenName" VARCHAR(50) NOT NULL,"lastName" VARCHAR(50) NOT NULL,"groupId" VARCHAR(50),"sex" CHAR(1),"category" CHAR(1),"notes" VARCHAR);
-create table "CONTACTPREFERENCES" ("columnId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL,"prefer" BOOLEAN NOT NULL);
-alter table "CONTACTPREFERENCES" add constraint "pk_contactPreferences" primary key("columnId","agendaTypeId");
+create table "CONTACTPREFERENCES" ("contactId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL,"prefer" BOOLEAN NOT NULL);
+alter table "CONTACTPREFERENCES" add constraint "pk_contactPreferences" primary key("contactId","agendaTypeId");
 create table "EVENTAGENDAITEMS" ("id" INTEGER NOT NULL,"eventId" INTEGER NOT NULL,"agendaTypeId" INTEGER NOT NULL,"prenotes" VARCHAR NOT NULL,"contactId" INTEGER DEFAULT null,"postnotes" VARCHAR NOT NULL);
 alter table "EVENTAGENDAITEMS" add constraint "pk_eventAgendaItems" primary key("id","eventId");
 alter table "EVENTS" add constraint "event_fk_eventTypeId" foreign key("eventTypeId") references "EVENTTYPES"("id") on update CASCADE on delete RESTRICT;
@@ -17,7 +17,7 @@ alter table "AGENDATYPES" add constraint "fk_agendaTypeParent" foreign key("pare
 alter table "EVENTTYPEAGENDA" add constraint "fk_agendaTypes" foreign key("agendaTypeId") references "AGENDATYPES"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTTYPEAGENDA" add constraint "fk_eventTypes" foreign key("eventTypeId") references "EVENTTYPES"("id") on update CASCADE on delete RESTRICT;
 alter table "CONTACTPREFERENCES" add constraint "fk_cpAgendaTypes" foreign key("agendaTypeId") references "AGENDATYPES"("id") on update CASCADE on delete RESTRICT;
-alter table "CONTACTPREFERENCES" add constraint "fk_cpContacts" foreign key("columnId") references "CONTACTS"("id") on update CASCADE on delete RESTRICT;
+alter table "CONTACTPREFERENCES" add constraint "fk_cpContacts" foreign key("contactId") references "CONTACTS"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTAGENDAITEMS" add constraint "fk_agendaTypes" foreign key("agendaTypeId") references "AGENDATYPES"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTAGENDAITEMS" add constraint "fk_eaiContacts" foreign key("contactId") references "CONTACTS"("id") on update CASCADE on delete RESTRICT;
 alter table "EVENTAGENDAITEMS" add constraint "fk_events" foreign key("eventId") references "EVENTS"("id") on update CASCADE on delete RESTRICT;

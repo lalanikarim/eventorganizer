@@ -269,7 +269,7 @@ class Event extends Controller {
     val sqlNow = new Date(now.getTime)
 
 
-    val eq = for { e <- eventsTable.filter(_.id === id) } yield e
+    val eq = for { e <- eventsTable.filter(_.id === id) } yield (e -> age(e.date))
     val eaq = for { (eai,at) <- eventAgendaItemsTable.filter(eai =>
       eai.id === eventAgendaItemId && eai.eventId === id) join
       agendaTypesTable on (_.agendaTypeId === _.id) } yield (eai,at)
@@ -278,12 +278,21 @@ class Event extends Controller {
       val (eai,at) = ea
       cp.agendaTypeId === at.id || cp.agendaTypeId === at.parent.getOrElse(at.id)}} yield (cp.contactId, cp.prefer)).distinct
 
-    val historySelf = (for {
+    val historySelfQ = for {
       ((c,h),e) <- contactsTable join eventAgendaItemsTable on (_.id === _.contactId) join eventsTable on (_._2.eventId === _.id)
-    } yield (c.id -> e.date)
-    ) groupBy(_._1) map {
-      case (cid,agg) => (cid -> agg.map(_._2).max.map(d => age(d)))
+    } yield (c,e,h)
+
+    val historySelf = (for { (c,e,h) <- historySelfQ} yield (c.id,e.date)) groupBy(_._1) map {
+      case (cid,agg) => (cid -> agg.map(_._2).max)
     }
+
+    val hsAgendaType = for {
+      (((c,e,h),at),agg) <- historySelfQ join agendaTypesTable on (_._3.agendaTypeId === _.id) join historySelf on {(ceh,agg) =>
+        val ((c,e,h),at) = ceh
+        val (cid,optDate) = agg
+        optDate.isDefined && optDate === e.date && cid === c.id
+      }
+    } yield (c.id,agg._2.map(d => age(d)),at.name)
 
     val historyGroup = (for {
       (((c1,h),e),c) <- contactsTable join
@@ -305,10 +314,10 @@ class Event extends Controller {
         case None => contactsTable
       }) joinLeft
       cpq on (_.id === _._1) joinLeft
-      historySelf on (_._1.id === _._1) joinLeft
+      hsAgendaType on (_._1.id === _._1) joinLeft
       historyGroup on (_._1._1.id === _._1)
-    } yield (c,hs.map(_._2) ,hg.map(_._2), cp.map(_._2))) sortBy {r =>
-      val (c,hs,hg,cp) = r
+    } yield (c,hs.map(_._2),hs.map(_._3) ,hg.map(_._2), cp.map(_._2))) sortBy {r =>
+      val (c,hs,hsat,hg,cp) = r
       c.givenName -> c.lastName
     }
 
@@ -327,10 +336,10 @@ class Event extends Controller {
         }
 
         val cFlat = c map { item =>
-          val (contact, hs, hg, cp) = item
-          (contact,clean(flatten(hs)),clean(flatten(hg)),cp)
+          val (contact, hs, hsat, hg, cp) = item
+          (contact,clean(flatten(hs)),hsat.getOrElse(""),clean(flatten(hg)),cp)
         }
-        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head,eai,at,cFlat),views.html.contact.add()))))
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,cFlat),views.html.contact.add()))))
       } else {
         NotFound
       }
