@@ -45,7 +45,13 @@
             }
             </td>
             <td>
-                @hs<br/>@hsat
+                @if(hs.length > 0){
+                    @if(hs == eventDays){
+                        <strong class="text-primary">@hs<br/>(@hsat)</strong>
+                    } else {
+                        @hs<br/>(@hsat)
+                    }
+                }
             </td>
             <td>
                 @hg
