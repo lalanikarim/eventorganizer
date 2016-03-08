@@ -335,9 +335,16 @@ class Event extends Controller {
           case _ => str
         }
 
-        val cFlat = c map { item =>
+        val (_,cFlat) = ((Seq[Int](),Seq[(models.Contact,String,String,String,Option[Boolean])]()) /: (c map { item =>
           val (contact, hs, hsat, hg, cp) = item
           (contact,clean(flatten(hs)),hsat.getOrElse(""),clean(flatten(hg)),cp)
+        })){(c,i) =>
+          val (sc,sr) = c
+          val (contact, hs, hsat, hg, cp) = i
+          if (sc.contains(contact.id))
+            c
+          else
+            (sc :+ contact.id, sr :+ i)
         }
         Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,cFlat),views.html.contact.add()))))
       } else {
