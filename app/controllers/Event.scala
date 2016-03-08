@@ -292,7 +292,7 @@ class Event extends Controller {
         val (cid,optDate) = agg
         optDate.isDefined && optDate === e.date && cid === c.id
       }
-    } yield (c.id,agg._2.map(d => age(d)),at.name)
+    } yield (c.id,agg._2.map(d => age(d)),at.name,e.id)
 
     val historyGroup = (for {
       (((c1,h),e),c) <- contactsTable join
@@ -316,8 +316,8 @@ class Event extends Controller {
       cpq on (_.id === _._1) joinLeft
       hsAgendaType on (_._1.id === _._1) joinLeft
       historyGroup on (_._1._1.id === _._1)
-    } yield (c,hs.map(_._2),hs.map(_._3) ,hg.map(_._2), cp.map(_._2))) sortBy {r =>
-      val (c,hs,hsat,hg,cp) = r
+    } yield (c,hs.map(_._2),hs.map(_._3),hs.map(_._4) ,hg.map(_._2), cp.map(_._2))) sortBy {r =>
+      val (c,hs,hsat,hse,hg,cp) = r
       c.givenName -> c.lastName
     }
 
@@ -329,18 +329,22 @@ class Event extends Controller {
       if (e.size > 0 && ea.size > 0){
         val (eai, at) = ea.head
 
+        val negAge = "^-(.*)"r
+        val posAge = "^([0-9].*)".r
         def flatten(ooStr: Option[Option[String]]) = ooStr.map(_.getOrElse("")).getOrElse("")
         def clean(str: String) = str match {
           case "00:00:00" => "Today"
+          case negAge(date) => "In " + date
+          case posAge(date) => date + " ago"
           case _ => str
         }
 
-        val (_,cFlat) = ((Seq[Int](),Seq[(models.Contact,String,String,String,Option[Boolean])]()) /: (c map { item =>
-          val (contact, hs, hsat, hg, cp) = item
-          (contact,clean(flatten(hs)),hsat.getOrElse(""),clean(flatten(hg)),cp)
+        val (_,cFlat) = ((Seq[Int](),Seq[(models.Contact,String,String,Int,String,Option[Boolean])]()) /: (c map { item =>
+          val (contact, hs, hsat,hse, hg, cp) = item
+          (contact,clean(flatten(hs)),hsat.getOrElse(""),hse.getOrElse(-1),clean(flatten(hg)),cp)
         })){(c,i) =>
           val (sc,sr) = c
-          val (contact, hs, hsat, hg, cp) = i
+          val (contact, hs, hsat,hse, hg, cp) = i
           if (sc.contains(contact.id))
             c
           else
