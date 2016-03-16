@@ -4,7 +4,6 @@
     <table class="table">
         <thead>
             <tr>
-                <th>Id</th>
                 <th>Date</th>
                 <th>Name</th>
                 <th>Location</th>
@@ -14,14 +13,13 @@
         <tbody>
             @for((event,location, count) <- events){
             <tr>
-                <td>@event.id</td>
                 <td>@event.date</td>
                 <td>@event.name</td>
                 <td>@location.name</td>
                 <td>
                     <div class="btn-group" role="group">
                         <a href="@routes.Event.get(event.id)" class="btn btn-primary btn-sm">Edit</a>
-                        <a href="@routes.Event.assignments(event.id)" class="btn btn-default btn-sm">Assignments</a>
+                        <a href="@routes.Event.assignments(event.id)" class="btn btn-default btn-sm">Assign</a>
                         @if(count == 0){
                         <a href="@routes.Event.remove(event.id)" class="btn btn-danger btn-sm">Delete</a>
                         }

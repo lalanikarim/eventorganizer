@@ -1,0 +1,20 @@
+@(name: String,report: Seq[(String,Double)])
+<div class="row">
+    <h3>@name</h3>
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for((category,stat) <- report){
+        <tr>
+            <td>@category</td>
+            <td>@{"%.2f" format stat}%</td>
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>

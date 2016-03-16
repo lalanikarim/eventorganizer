@@ -86,7 +86,7 @@ class Event extends Controller {
   def submit = Action.async { implicit request =>
     val form = Form(
       tuple(
-        "date" -> date("MM-dd-yyyy"),
+        "date" -> date("yyyy-MM-dd"),
         "eventTypeId" -> number,
         "locationId" -> number
       )
@@ -130,7 +130,7 @@ class Event extends Controller {
     val form = Form(
       tuple(
         "name" -> text,
-        "date" -> date("MM-dd-yyyy"),
+        "date" -> date("yyyy-MM-dd"),
         "eventTypeId" -> number,
         "locationId" -> number
       )

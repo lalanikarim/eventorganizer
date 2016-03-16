@@ -116,12 +116,14 @@ class Contact extends Controller {
   }
 
   def edit (id: Int) = Action.async { implicit request =>
-    val cq = for { c <- contactsTable.filter(_.id === id) } yield (c.givenName, c.lastName, c.groupId, c.notes)
+    val cq = for { c <- contactsTable.filter(_.id === id) } yield (c.givenName, c.lastName, c.sex, c.category, c.groupId, c.notes)
 
     val form = Form(
       tuple(
         "givenName" -> text,
         "lastName" -> text,
+        "sex" -> optional(text verifying pattern("""[mfMF]""".r, error="""Invalid value for parameter sex""")),
+        "category" -> optional(text verifying pattern("""[rasRAS]""".r, error="""Invalid value for parameter category""")),
         "groupId" -> optional(text),
         "notes" -> optional(text)
       )
@@ -130,8 +132,8 @@ class Contact extends Controller {
     form.bindFromRequest.fold(
       hasErrors => Future successful BadRequest,
       contactForm => {
-        val (givenName, lastName, groupId, notes) = contactForm
-        db.run(cq.update(givenName,lastName,groupId,notes)).map {
+        val (givenName, lastName, sex, category, groupId, notes) = contactForm
+        db.run(cq.update(givenName,lastName, sex, category, groupId,notes)).map {
           _ => Redirect("/contact")
         } recover {
           case e:Throwable => {
