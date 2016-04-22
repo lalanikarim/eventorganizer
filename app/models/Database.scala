@@ -11,6 +11,13 @@ import slick.profile.SqlProfile.ColumnOption.SqlType
   * Created by karim on 1/20/16.
   */
 
+case class LoggedInUser(id: String, givenName: String, lastName: String,
+                        lastLogin: java.sql.Date)
+
+case class User(id: String, givenName: String, lastName: String,
+                email: String, password: Option[String], failedAttempts: Int, lastLogin: java.sql.Date,
+                lastAttempt: java.sql.Date, active: Boolean, resetKey: Option[String])
+
 case class Location(id: Int, name: String)
 
 case class EventType(id: Int, name: String)
@@ -45,8 +52,8 @@ case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int
 
 case class AgendaType(id: Int, name: String, parent: Option[Int])
 case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
-case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "",
-                           contactId: Option[Int] = None, postnotes: String = "")
+case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "")
+case class EventAgendaItemContact(id: Int, eventId: Int, contactId: Int, postnotes: String = "")
 
 object Database {
 
@@ -191,24 +198,63 @@ object Database {
 
       def prenotes = column[String]("prenotes")
 
-      def contactId = column[Option[Int]]("contactId",O.Default(None))
-
-      def postnotes = column[String]("postnotes")
-
       def events = foreignKey("fk_events", eventId, Events.eventsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
       def agandaTypes = foreignKey("fk_agendaTypes", agendaTypeId, agendaTypesTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
 
-      def contacts = foreignKey("fk_eaiContacts", contactId, Contacts.contactsTable)(_.id?, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
-
-      def * = (id, eventId, agendaTypeId, prenotes, contactId, postnotes) <>(EventAgendaItem.tupled, EventAgendaItem.unapply)
+      def * = (id, eventId, agendaTypeId, prenotes) <> (EventAgendaItem.tupled, EventAgendaItem.unapply)
 
       def pk = primaryKey("pk_eventAgendaItems",(id,eventId))
+    }
+
+    class EventAgendaItemContactsTable(tag: Tag) extends Table[EventAgendaItemContact](tag, "EVENTAGENDAITEMCONTACTS") {
+
+      def id = column[Int]("id")
+
+      def eventId = column[Int]("eventId")
+
+      def contactId = column[Int]("contactId")
+
+      def postnotes = column[String]("postnotes")
+
+      def contacts = foreignKey("fk_eaiContacts", contactId, Contacts.contactsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def eventAgendaItems = foreignKey("fk_eventAgendaItems", (id, eventId),
+        eventAgendaItemsTable)({e => (e.id,e.eventId)}, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+
+      def * = (id, eventId, contactId, postnotes) <> (EventAgendaItemContact.tupled, EventAgendaItemContact.unapply)
+
+      def pk = primaryKey("pk_eventAgendaItemContact", (id, eventId, contactId))
+
     }
 
     val agendaTypesTable = TableQuery[AgendaTypesTable]
     val agendaItemsTable = TableQuery[AgendaItemsTable]
     val eventAgendaItemsTable = TableQuery[EventAgendaItemsTable]
+    val eventAgendaItemContactsTable = TableQuery[EventAgendaItemContactsTable]
+  }
+
+  object Users {
+    class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
+      def id = column[String]("id", O.PrimaryKey, O.SqlType("VARCHAR(25)"))
+      def givenName = column[String]("givenName", O.SqlType("VARCHAR(25)"))
+      def lastName = column[String]("lastName", O.SqlType("VARCHAR(25)"))
+      def email = column[String]("email", O.SqlType("VARCHAR(50)"))
+      def password = column[Option[String]]("password", O.SqlType("VARCHAR(25)"))
+      def failedAttemtps = column[Int]("failedAttempts", O.Default(0))
+      def lastLogin = column[java.sql.Date]("lastLogin")
+      def lastAttempt = column[java.sql.Date]("lastAttempt")
+      def active = column[Boolean]("active")
+      def resetKey = column[Option[String]]("resetKey",O.SqlType("VARCHAR(50)"))
+
+      def * =
+        (id,givenName,lastName,email,
+          password,failedAttemtps,lastLogin,
+          lastAttempt,active,resetKey) <> (User.tupled, User.unapply)
+
+    }
+
+    val usersTable = TableQuery[UsersTable]
   }
 
 }

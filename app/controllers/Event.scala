@@ -237,12 +237,14 @@ class Event extends Controller {
 
     val aiq = (for {
       ((ea,at),c) <- (eventAgendaItemsTable.filter(_.eventId === id) join
-                  agendaTypesTable on (_.agendaTypeId === _.id) joinLeft
-                  contactsTable on {(e,c) =>
-                    val (ea,ai) = e
-                    ea.contactId === c.id
+          agendaTypesTable on (_.agendaTypeId === _.id) joinLeft {
+            eventAgendaItemContactsTable.filter(_.eventId === id) join contactsTable on (_.contactId === _.id)
+          } on {(eaai,ec) =>
+                    val (ea,ai) = eaai
+                    val (eac,c) = ec
+                    ea.id === eac.id && ea.eventId === eac.eventId
                   })
-    } yield (ea,at,c)).sortBy(_._1.id)
+    } yield (ea,at,c.map(_._2))).sortBy(_._1.id)
 
     (for {
       e <- db.run(eq.result)
@@ -278,8 +280,16 @@ class Event extends Controller {
       val (eai,at) = ea
       cp.agendaTypeId === at.id || cp.agendaTypeId === at.parent.getOrElse(at.id)}} yield (cp.contactId, cp.prefer)).distinct
 
+    val assignq = for { eac <- eventAgendaItemContactsTable.filter(eac => eac.eventId === id && eac.id === eventAgendaItemId)} yield eac.contactId
+
     val historySelfQ = for {
-      ((c,h),e) <- contactsTable join eventAgendaItemsTable on (_.id === _.contactId) join eventsTable on (_._2.eventId === _.id)
+      (((c,ec),e),h) <- contactsTable join
+        eventAgendaItemContactsTable on (_.id === _.contactId) join
+        eventsTable on (_._2.eventId === _.id) join
+        eventAgendaItemsTable on {(cece,ea) =>
+          val ((c,ec),e) = cece
+          ea.id === ec.id && ea.eventId === ec.eventId
+      }
     } yield (c,e,h)
 
     val historySelf = (for { (c,e,h) <- historySelfQ} yield (c.id,e.date)) groupBy(_._1) map {
@@ -296,7 +306,7 @@ class Event extends Controller {
 
     val historyGroup = (for {
       (((c1,h),e),c) <- contactsTable join
-        eventAgendaItemsTable on (_.id === _.contactId) join
+        eventAgendaItemContactsTable on (_.id === _.contactId) join
         eventsTable on (_._2.eventId === _.id) join
         contactsTable on ((h,c) => h._1._1.id =!= c.id && h._1._1.groupId === c.groupId)
     } yield (c.id -> e.date)
@@ -325,6 +335,7 @@ class Event extends Controller {
       e <- db.run(eq.result)
       ea <- db.run(eaq.result)
       c <- db.run(cq.result)
+      a <- db.run(assignq.result)
     } yield {
       if (e.size > 0 && ea.size > 0){
         val (eai, at) = ea.head
@@ -350,7 +361,7 @@ class Event extends Controller {
           else
             (sc :+ contact.id, sr :+ i)
         }
-        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,cFlat),views.html.contact.add()))))
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,a,cFlat),views.html.contact.add()))))
       } else {
         NotFound
       }
@@ -363,9 +374,7 @@ class Event extends Controller {
   }
 
   def assign(id: Int, eaiId: Int, contactId: Int) = Action.async { implicit request =>
-    val aq = for { eai <- eventAgendaItemsTable.filter(eai => eai.eventId === id && eai.id === eaiId) } yield eai.contactId
-
-    (db.run(aq.update(Some(contactId))).map {
+    (db.run(eventAgendaItemContactsTable += models.EventAgendaItemContact(id = eaiId, eventId = id, contactId = contactId)).map {
       _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
     }) recover {
       case e:Throwable => {
@@ -375,10 +384,10 @@ class Event extends Controller {
     }
   }
 
-  def unassign(id: Int, eaiId: Int) = Action.async { implicit request =>
-    val aq = for { eai <- eventAgendaItemsTable.filter(eai => eai.eventId === id && eai.id === eaiId) } yield eai.contactId
+  def unassign(id: Int, eaiId: Int, contactId: Int) = Action.async { implicit request =>
+    val aq = for { eai <- eventAgendaItemContactsTable.filter(eai => eai.eventId === id && eai.id === eaiId && eai.contactId === contactId) } yield eai
 
-    (db.run(aq.update(None)).map {
+    (db.run(aq.delete).map {
       _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
     }) recover {
       case e:Throwable => {

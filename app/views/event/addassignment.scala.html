@@ -1,5 +1,5 @@
 @(event: models.Event, eventDays:String, eventAgendaItem: models.EventAgendaItem,
-    agendaType: models.AgendaType, contacts: Seq[(models.Contact,String,String,Int,String,Option[Boolean])])
+    agendaType: models.AgendaType, assignments: Seq[Int], contacts: Seq[(models.Contact,String,String,Int,String,Option[Boolean])])
 <div class="col-md-8 col-sm-12">
     <h4>Choose Assignment</h4>
     <dl class="dl-horizontal">
@@ -35,7 +35,7 @@
 
         @for((contact,hs,hsat,hse,hg, optPref) <- contacts){
         <tr
-        @if(eventAgendaItem.contactId.isDefined && eventAgendaItem.contactId.get == contact.id){
+        @if(assignments.contains(contact.id)){
         class="info"
         }
         >
@@ -64,11 +64,11 @@
                 @hg
             </td>
             <td>
-                @if(eventAgendaItem.contactId.isDefined){
-                    @if(eventAgendaItem.contactId.get != contact.id) {
-                        <a class="btn btn-danger btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Ressign</a>
+                @if(assignments.length > 0) {
+                    @if(!assignments.contains(contact.id)) {
+                        <a class="btn btn-danger btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Add</a>
                     } else {
-                        <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(event.id,eventAgendaItem.id)">Clear</a>
+                        <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(event.id,eventAgendaItem.id,contact.id)">Remove</a>
                     }
                 } else {
                     <a class="btn btn-primary btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Assign</a>

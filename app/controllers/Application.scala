@@ -38,7 +38,7 @@ class Application extends Controller {
     }.sortBy{_._1.date.desc}.take(20)
 
     val contactData = for {
-      ((e,ea),c) <- eventsTable join eventAgendaItemsTable on (_.id === _.eventId) join contactsTable on (_._2.contactId === _.id)
+      ((e,ea),c) <- eventsTable join eventAgendaItemContactsTable on (_.id === _.eventId) join contactsTable on (_._2.contactId === _.id)
     } yield {
       (c.id,c.category,c.sex,c.groupId)
     }
@@ -134,10 +134,12 @@ class Application extends Controller {
     import Agenda._
     import Locations._
     import Contacts._
+    import Users._
 
     val schema = locationsTable.schema ++ eventTypesTable.schema ++ eventsTable.schema ++
       agendaTypesTable.schema ++ agendaItemsTable.schema ++ contactsTable.schema ++
-      contactPreferencesTable.schema ++ eventAgendaItemsTable.schema
+      contactPreferencesTable.schema ++ eventAgendaItemsTable.schema ++ eventAgendaItemContactsTable.schema ++
+      usersTable.schema
 
     def combine(first: String, iString: Iterable[String]) = (("\n" + first + "\n") /: iString)((c,s) => c + s + ";\n");
 

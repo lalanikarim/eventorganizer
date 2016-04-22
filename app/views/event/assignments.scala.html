@@ -36,7 +36,7 @@
                     @optc.map(o => o.givenName + " " + o.lastName).getOrElse("")
                 </td>
                 @if(event.state == models.EventAttr.State.closed){
-                <td>@ai.postnotes</td>
+                <td>@{ /*ai.postnotes*/ }</td>
                 }
                 <td>
                     @if(event.state == models.EventAttr.State.open){

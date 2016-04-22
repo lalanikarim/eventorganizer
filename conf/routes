@@ -42,7 +42,7 @@ GET     /event/:id/delete           controllers.Event.remove(id: Int)
 GET     /event/:id/assignments      controllers.Event.assignments(id: Int)
 GET     /event/:id/assignments/:eventAgendaItemId       controllers.Event.getassignments(id: Int, eventAgendaItemId: Int, search: Option[String])
 GET     /event/:id/assign/:eaiId/:contactId             controllers.Event.assign(id: Int, eaiId: Int, contactId: Int)
-GET     /event/:id/unassign/:agendaItemId               controllers.Event.unassign(id: Int, agendaItemId: Int)
+GET     /event/:id/unassign/:eaiId/:contactId           controllers.Event.unassign(id: Int, eaiId: Int, contactId: Int)
 
 POST    /event/:id/agenda           controllers.Event.addagenda(id: Int)
 GET     /event/:id/:agendaItemId/delete         controllers.Event.removeagenda(id: Int, agendaItemId: Int)

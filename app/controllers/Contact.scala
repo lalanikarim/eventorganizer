@@ -26,7 +26,7 @@ class Contact extends Controller {
     val cq = (for {
       ((c,p),a) <- contactsTable joinLeft
         contactPreferencesTable on (_.id === _.contactId) joinLeft
-        eventAgendaItemsTable on ((cp,e) => cp._1.id === e.contactId)
+        eventAgendaItemContactsTable on ((cp,e) => cp._1.id === e.contactId)
     } yield (c,p,a)) groupBy {
       r =>
         val(c,p,a) = r
@@ -227,19 +227,22 @@ class Contact extends Controller {
 
   def recenthistory (id: Int) = {
     val chq = for {
-      (((eai,at),e),c) <- eventAgendaItemsTable join agendaTypesTable on
+      ((((eai,at),e),eac),c) <- eventAgendaItemsTable join agendaTypesTable on
         (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
           val (ea,at) = eai
           e.id === ea.eventId
-        } join contactsTable.filter(_.id === id) on { (eai,c) =>
+        } join eventAgendaItemContactsTable on { (eai, eaic) =>
           val ((ea,at),e) = eai
-          c.id === ea.contactId
+          eaic.eventId === ea.eventId && eaic.id === ea.id
+        } join contactsTable.filter(_.id === id) on { (eaic,c) =>
+          val (((ea,at),e),eac) = eaic
+          c.id === eac.contactId
         } sortBy { r =>
-          val (((ea,at),e),c) = r
+          val ((((ea,at),e),eac),c) = r
           (e.date.desc,e.name,at.name)
         } take 20
     } yield {
-      (e.date,e.name,at.name,eai.postnotes)
+      (e.date,e.name,at.name,eac.postnotes)
     }
 
     db.run(chq.result)
@@ -251,11 +254,14 @@ class Contact extends Controller {
         (_.agendaTypeId === _.id) join eventsTable.filter(_.eventTypeId === eventTypeId) on { (eai,e) =>
         val (ea,at) = eai
         e.id === ea.eventId
-      } join contactsTable.filter(_.id === id) on { (eai,c) =>
+      } join eventAgendaItemContactsTable on { (eai,eaic) =>
         val ((ea,at),e) = eai
-        c.id === ea.contactId
+        ea.id === eaic.id && ea.eventId === eaic.eventId
+      } join contactsTable.filter(_.id === id) on { (eaic,c) =>
+        val (((ea,at),e),eac) = eaic
+        c.id === eac.contactId
       } sortBy { r =>
-        val (((ea,at),e),c) = r
+        val ((((ea,at),e),eac),c) = r
         (e.date.desc,e.name,at.name)
       } take 20
     } yield {
@@ -271,11 +277,14 @@ class Contact extends Controller {
         (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
         val (ea,at) = eai
         e.id === ea.eventId
-      } join contactsTable.filter(_.id === id) on { (eai,c) =>
+      } join eventAgendaItemContactsTable on { (eai,eaic) =>
         val ((ea,at),e) = eai
-        c.id === ea.contactId
+        ea.id === eaic.id && ea.eventId === eaic.eventId
+      } join contactsTable.filter(_.id === id) on { (eai,c) =>
+        val (((ea,at),e),eac) = eai
+        c.id === eac.contactId
       } sortBy { r =>
-        val (((ea,at),e),c) = r
+        val ((((ea,at),e),eac),c) = r
         (e.date.desc,e.name,at.name)
       } take 20
     } yield {
