@@ -1,5 +1,6 @@
 @(event: models.Event, eventType: models.EventType,
-    agendaItems: Seq[(models.EventAgendaItem,models.AgendaType,Option[models.Contact])])
+    agendaItems: Seq[(models.EventAgendaItem,models.AgendaType)],
+    cmap: collection.mutable.Map[Int,Seq[models.Contact]])
 <div class="col-md-12">
     <h4>Event Assignments</h4>
     <div>
@@ -27,20 +28,22 @@
             </tr>
             </thead>
             <tbody>
-            @for((ai,at,optc) <- agendaItems){
+            @for((ai,at) <- agendaItems){
             <tr>
                 <td>@ai.id</td>
                 <td>@at.name</td>
                 <td>@ai.prenotes</td>
                 <td>
-                    @optc.map(o => o.givenName + " " + o.lastName).getOrElse("")
+                    @for(contact <- cmap.get(ai.id).getOrElse(Nil)){
+                        <div><a href="@routes.Contact.get(contact.id)">@{contact.givenName + " " + contact.lastName}</a></div>
+                    }
                 </td>
                 @if(event.state == models.EventAttr.State.closed){
                 <td>@{ /*ai.postnotes*/ }</td>
                 }
                 <td>
                     @if(event.state == models.EventAttr.State.open){
-                        <a class="btn btn-primary btn-sm" href="@routes.Event.getassignments(event.id, ai.id,None)">@if(optc.isDefined){
+                        <a class="btn btn-primary btn-sm" href="@routes.Event.getassignments(event.id, ai.id,None)">@if(cmap.contains(ai.id)){
                             Change
                             } else {
                             Assign

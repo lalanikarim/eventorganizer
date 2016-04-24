@@ -236,24 +236,31 @@ class Event extends Controller {
     } yield (e, et)
 
     val aiq = (for {
-      ((ea,at),c) <- (eventAgendaItemsTable.filter(_.eventId === id) join
-          agendaTypesTable on (_.agendaTypeId === _.id) joinLeft {
-            eventAgendaItemContactsTable.filter(_.eventId === id) join contactsTable on (_.contactId === _.id)
-          } on {(eaai,ec) =>
-                    val (ea,ai) = eaai
-                    val (eac,c) = ec
-                    ea.id === eac.id && ea.eventId === eac.eventId
-                  })
-    } yield (ea,at,c.map(_._2))).sortBy(_._1.id)
+      (ea,at) <- eventAgendaItemsTable.filter(_.eventId === id) join
+          agendaTypesTable on (_.agendaTypeId === _.id)
+    } yield (ea,at)).sortBy(_._1.id)
+
+    val cq = (for {
+      (c,eac) <- contactsTable join eventAgendaItemContactsTable.filter(_.eventId === id) on (_.id === _.contactId)
+    } yield (eac.id,c)).sortBy(_._1)
 
     (for {
       e <- db.run(eq.result)
       ai <- db.run(aiq.result)
+      c <- db.run(cq.result)
     } yield {
-      if (e.length > 0)
-        Ok(views.html.index("Event Assignments")(views.html.event.assignments(e.head._1,e.head._2,ai)))
-      else
-        NotFound
+      if (e.length > 0) {
+        val cmap = collection.mutable.Map[Int,Seq[models.Contact]]()
+        c.foreach( item => {
+          val (idx,contact) = item
+          if (!cmap.contains(idx)) {
+            cmap ++= List(idx -> Seq(contact))
+          } else {
+            cmap ++= List(idx -> (cmap.get(idx).get :+ contact))
+          }
+        })
+        Ok(views.html.index("Event Assignments")(views.html.event.assignments(e.head._1, e.head._2, ai, cmap)))
+      } else NotFound
     }) recover {
       case e:Throwable => {
         e.printStackTrace()
