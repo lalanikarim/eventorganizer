@@ -4,7 +4,7 @@ import java.sql.{Date, SQLType}
 import java.util
 import javax.inject._
 
-import models.{ContactAttr, DatabaseAO, LoggedInUser, PasswordUtils}
+import models._
 import play.api.data.Forms._
 import play.api.data._
 import play.api.db.slick.DatabaseConfigProvider
@@ -32,7 +32,10 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
 
   val db = config.db
 
-  def index = Action.async {
+  def index = Action.async { implicit request =>
+
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val e = (for {
       ((e,l),a) <- (eventsTable join locationsTable on (_.locationId === _.id)) joinLeft
         eventAgendaItemsTable on (_._1.id === _.eventId)
@@ -247,17 +250,20 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
 
   }
 
-  def logout = Action {
+  def logout = Action { implicit request =>
+    request.session - "user"
     Redirect(routes.Application.index()).withNewSession
   }
 
-  def scripts = Action {
+  def scripts = Action { implicit request =>
     import dao._
     import Events._
     import Agenda._
     import Locations._
     import Contacts._
     import Users._
+
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
 
     val schema = locationsTable.schema ++ eventTypesTable.schema ++ eventsTable.schema ++
       agendaTypesTable.schema ++ agendaItemsTable.schema ++ contactsTable.schema ++

@@ -1,7 +1,8 @@
 package controllers
 
 import javax.inject._
-import models.DatabaseAO
+
+import models.{DatabaseAO, SessionUtils}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -21,8 +22,8 @@ class AgendaItem @Inject() (dao: DatabaseAO) extends Controller {
 
   import config.driver.api._
   import config.db
-  def index = Action.async {
-
+  def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
     val agendaItems = for {
       ((ai,et),at) <- (agendaItemsTable join eventTypesTable on (_.eventTypeId === _.id) join
         agendaTypesTable on (_._1.agendaTypeId === _.id)).sortBy( p => {
@@ -43,6 +44,7 @@ class AgendaItem @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def get(id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
     val q = for { a <- agendaItemsTable if a.id === id } yield a
 
     for {

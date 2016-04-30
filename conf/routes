@@ -11,6 +11,14 @@ GET     /reset                      controllers.Application.reset
 POST    /reset                      controllers.Application.processreset
 GET     /logout                     controllers.Application.logout
 
+GET     /register                   controllers.Account.register
+POST    /register                   controllers.Account.processregister
+
+GET     /account/list               controllers.Account.list
+GET     /account/:id                controllers.Account.get(id: String)
+POST    /account/:id                controllers.Account.update(id: String)
+GET     /account/:id/active/:active controllers.Account.setactive(id: String, active: Boolean)
+
 GET     /location                   controllers.Location.index
 GET     /location/:id               controllers.Location.get(id: Int)
 POST    /location                   controllers.Location.submit

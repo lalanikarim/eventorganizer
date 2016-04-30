@@ -1,4 +1,4 @@
-@(title: String)(content: Html)
+@(title: String)(content: Html)(implicit user: Option[models.LoggedInUser])
 
 <!DOCTYPE html>
 
@@ -28,15 +28,18 @@
                 </div>
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                        <li><a href="/event">Events</a></li>
-                        <li><a href="/contact">Contacts</a></li>
+                        <li><a href="@routes.Event.index()">Events</a></li>
+                        <li><a href="@routes.Contact.index()">Contacts</a></li>
                         <li><hr/></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a href="/location">Locations</a></li>
-                        <li><a href="/eventtype">Event Types</a></li>
-                        <li><a href="/agendatype">Agenda Types</a></li>
-                        <li><a href="/agendaitem">Agenda Items</a></li>
+                        @if(user.map(_.id).getOrElse("") == "admin") {
+                        <li><a href="@routes.Account.list()">Accounts</a></li>
+                        }
+                        <li><a href="@routes.Location.index()">Locations</a></li>
+                        <li><a href="@routes.EventType.index()">Event Types</a></li>
+                        <li><a href="@routes.AgendaType.index()">Agenda Types</a></li>
+                        <li><a href="@routes.Application.logout()">Logout</a></li>
                     </ul>
                 </div>
             </div>
@@ -44,6 +47,11 @@
         </nav>
         <div class="col-md-1 hidden-sm"></div>
         <div class="col-md-10 col-sm-12">
+            @user.map{u =>
+            <div class="row">
+                Welcome! @u.givenName @u.lastName, Last Login: @u.lastLogin
+            </div>
+            }
             @content
         </div>
         <div class="col-md-1 hidden-sm"></div>

@@ -2,9 +2,9 @@ package controllers
 
 import java.sql.DriverAction
 import javassist.tools.web.BadHttpRequest
-
 import javax.inject._
-import models.DatabaseAO
+
+import models.{DatabaseAO, SessionUtils}
 import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.data.Forms._
@@ -27,6 +27,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
   import config.driver.api._
 
   def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
     val cq = (for {
       ((c,p),a) <- contactsTable joinLeft
         contactPreferencesTable on (_.id === _.contactId) joinLeft
@@ -64,6 +65,8 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def get (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val cq = for { c <- contactsTable.filter(_.id === id) } yield c
 
     val cpyq = for {

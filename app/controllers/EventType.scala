@@ -2,7 +2,7 @@ package controllers
 
 import javax.inject._
 
-import models.DatabaseAO
+import models.{DatabaseAO, SessionUtils}
 import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, Controller}
@@ -24,7 +24,8 @@ class EventType @Inject() (dao: DatabaseAO) extends Controller {
   import config.driver.api._
   //import models.DbConfig.current.driver
 
-  def index = Action.async {
+  def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
     db.run(eventTypesTable.sortBy(_.id).result).map(eventTypes =>
       Ok(views.html.index("Event Types")(
         views.html.aggregator(Seq(views.html.eventtype.list(eventTypes.toList),views.html.eventtype.add())))
@@ -33,6 +34,8 @@ class EventType @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def get (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val agenda = for {
       (a,at) <- agendaItemsTable join agendaTypesTable on ((a,at) => a.agendaTypeId === at.id)
       if (a.eventTypeId === id)

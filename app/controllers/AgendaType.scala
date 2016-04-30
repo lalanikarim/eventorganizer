@@ -1,7 +1,8 @@
 package controllers
 
 import javax.inject._
-import models.DatabaseAO
+
+import models.{DatabaseAO, SessionUtils}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -19,23 +20,30 @@ class AgendaType @Inject() (dao: DatabaseAO) extends Controller {
   import Agenda._
   import config.db
   import config.driver.api._
-  def index = Action.async {
+  def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     db.run(agendaTypesTable.sortBy(_.id).result).map(
       agendaTypes => Ok(
         views.html.index("Agenda Types")(
-          views.html.aggregator(Seq(views.html.agendatype.list(agendaTypes),
-            views.html.agendatype.add(
-              (Seq[models.AgendaType]() /: agendaTypes){(c,at) =>
-                if (at.parent.isEmpty) c :+ at else c
-              }
+          views.html.aggregator(
+            Seq(
+              views.html.agendatype.list(agendaTypes),
+              views.html.agendatype.add(
+                (Seq[models.AgendaType]() /: agendaTypes) { (c, at) =>
+                  if (at.parent.isEmpty) c :+ at else c
+                }
+              )
             )
-          ))
+          )
         )
       )
     )
   }
 
   def get (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val atq = agendaTypesTable.filter(_.id === id).take(1)
     val latq = agendaTypesTable.filter(_.parent.isEmpty).sortBy(_.id)
 

@@ -2,9 +2,9 @@ package controllers
 
 import java.sql.{Date, SQLType}
 import java.util
-
 import javax.inject._
-import models.DatabaseAO
+
+import models.{DatabaseAO, SessionUtils}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -26,6 +26,8 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   import config.driver.api._
 
   def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val l = for {l <- locationsTable.sortBy(_.id)} yield l
     val et = for {et <- eventTypesTable.sortBy(_.id)} yield et
     val e = (for {
@@ -58,6 +60,8 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def get (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val eq = for { e <- eventsTable.filter(_.id === id)} yield e
     val aiq = for { (ea,at) <- (eventAgendaItemsTable.filter(_.eventId === id) join
       agendaTypesTable on (_.agendaTypeId === _.id)).sortBy(_._1.id) } yield (ea,at.name)
@@ -235,6 +239,8 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def assignments (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val eq = for {
       (e, et) <- eventsTable.filter(_.id === id) join eventTypesTable on (_.eventTypeId === _.id)
     } yield (e, et)
@@ -274,6 +280,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def getassignments(id: Int, eventAgendaItemId: Int, search: Option[String]) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
 
     val age = SimpleFunction.unary[Date,String]("age")
     val currentDate = SimpleLiteral[Date]("CURRENT_DATE")

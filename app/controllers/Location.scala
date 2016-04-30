@@ -6,7 +6,7 @@ import play.api.mvc.{Action, Controller}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import javax.inject._
 
-import models.DatabaseAO
+import models.{DatabaseAO, SessionUtils}
 
 import scala.concurrent.Future
 
@@ -21,13 +21,17 @@ class Location @Inject() (dao: DatabaseAO) extends Controller {
   import config.db
   import config.driver.api._
 
-  def index = Action.async {
+  def index = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     db.run(locationsTable.result).map(locations => Ok(views.html.index("Location")(
       views.html.aggregator(Seq(views.html.location.list(locations.toList),views.html.location.add()))))
     )
   }
 
   def get (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val q = locationsTable.filter(_.id === id).take(1)
     db.run(q.result).map {
       locations =>
