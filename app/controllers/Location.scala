@@ -4,16 +4,22 @@ import play.api.data._
 import play.api.data.Forms._
 import play.api.mvc.{Action, Controller}
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import javax.inject._
+
+import models.DatabaseAO
 
 import scala.concurrent.Future
 
 /**
   * Created by karim on 1/21/16.
   */
-class Location extends Controller {
-  import models.Database.Locations._
-  import models.DbConfig.current.db
-  import models.DbConfig.current.driver.api._
+@Singleton
+class Location @Inject() (dao: DatabaseAO) extends Controller {
+
+  import dao._
+  import Locations._
+  import config.db
+  import config.driver.api._
 
   def index = Action.async {
     db.run(locationsTable.result).map(locations => Ok(views.html.index("Location")(

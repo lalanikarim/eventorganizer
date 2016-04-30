@@ -1,10 +1,12 @@
 package models
 
-import play.api.db.slick.DatabaseConfigProvider
+import com.google.inject.Inject
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.driver.JdbcProfile
 import slick.driver.JdbcDriver
 import slick.lifted.ProvenShape
 import play.api.Play.current
+import play.api.libs.json.Json
 import slick.profile.SqlProfile.ColumnOption.SqlType
 
 /**
@@ -26,6 +28,10 @@ case class Contact(id: Int, givenName: String, lastName: String,
                    groupId: Option[String], sex: Option[String],
                    category: Option[String],
                    notes: Option[String])
+
+object JsonFormats {
+  implicit val loggedInUserFormat = Json.format[LoggedInUser]
+}
 
 object ContactAttr {
   object Type {
@@ -55,9 +61,10 @@ case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
 case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "")
 case class EventAgendaItemContact(id: Int, eventId: Int, contactId: Int, postnotes: String = "")
 
-object Database {
+class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
 
-  import DbConfig.current.driver.api._
+  val config = dbConfig
+  import dbConfig.driver.api._
 
   object Locations {
 
@@ -240,8 +247,8 @@ object Database {
       def givenName = column[String]("givenName", O.SqlType("VARCHAR(25)"))
       def lastName = column[String]("lastName", O.SqlType("VARCHAR(25)"))
       def email = column[String]("email", O.SqlType("VARCHAR(50)"))
-      def password = column[Option[String]]("password", O.SqlType("VARCHAR(25)"))
-      def failedAttemtps = column[Int]("failedAttempts", O.Default(0))
+      def password = column[Option[String]]("password", O.SqlType("VARCHAR(64)"))
+      def failedAttempts = column[Int]("failedAttempts", O.Default(0))
       def lastLogin = column[java.sql.Date]("lastLogin")
       def lastAttempt = column[java.sql.Date]("lastAttempt")
       def active = column[Boolean]("active")
@@ -249,17 +256,13 @@ object Database {
 
       def * =
         (id,givenName,lastName,email,
-          password,failedAttemtps,lastLogin,
+          password,failedAttempts,lastLogin,
           lastAttempt,active,resetKey) <> (User.tupled, User.unapply)
-
     }
 
     val usersTable = TableQuery[UsersTable]
   }
 
-}
-object DbConfig {
-  val current = DatabaseConfigProvider.get[JdbcProfile](play.api.Play.current)
 }
 
 

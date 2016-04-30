@@ -1,26 +1,36 @@
 package controllers
 
-import java.sql.{SQLType, Date}
+import java.sql.{Date, SQLType}
 import java.util
+import javax.inject._
 
-import models.ContactAttr
+import models.{ContactAttr, DatabaseAO, LoggedInUser, PasswordUtils}
 import play.api.data.Forms._
 import play.api.data._
+import play.api.db.slick.DatabaseConfigProvider
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{Action, Controller, Result}
 import play.twirl.api.Html
+import slick.driver.JdbcProfile
 
-import scala.concurrent.Future
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import play.api.libs.json._
 
+@Singleton
+class Application @Inject() (dao: DatabaseAO) extends Controller {
 
-class Application extends Controller {
+  import dao._
+  import Locations._
+  import Events._
+  import Agenda._
+  import Contacts._
+  import Users._
 
-  import models.Database.Locations._
-  import models.Database.Events._
-  import models.Database.Agenda._
-  import models.Database.Contacts._
-  import models.DbConfig.current.db
-  import models.DbConfig.current.driver.api._
+  import config.driver.api._
+  import models.JsonFormats._
+
+  val db = config.db
 
   def index = Action.async {
     val e = (for {
@@ -127,9 +137,122 @@ class Application extends Controller {
     }
   }
 
+  def nosession = Action {
+    Ok(views.html.login.login(""))
+  }
+
+  def login = Action.async { implicit request =>
+    val form = Form(
+      tuple(
+        "login" -> text,
+        "password" -> text
+      )
+    )
+
+    val invalidCredentials = "Invalid credentials."
+    val maxFailedAttempts = "Account locked due to exceeding maximum failed attempts."
+
+    form.bindFromRequest.fold(
+      hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
+      loginForm => {
+        val (userid,password) = loginForm
+
+        val uq = for { u <- usersTable.filter(u => u.id === userid && u.failedAttempts < 2 &&
+          u.password === PasswordUtils.getHash(password)) } yield u
+        val uuq = for { u <- usersTable.filter(_.id === userid) } yield (u.active, u.lastLogin, u.lastAttempt, u.failedAttempts)
+
+        for {
+          u <- db.run(uq.result)
+          uu <- db.run(uuq.result)
+        } yield {
+          if (uu.length == 0)
+            Ok(views.html.login.login(invalidCredentials))
+          else {
+            val (active, lastLogin, lastAttempt, failedAttempts) = uu.head
+            val user = if (u.length == 0) None else Some(u.head)
+            try {
+              Await.result(
+                db.run(
+                  uuq.update(
+                    user.map(_ => active).getOrElse(active && failedAttempts < 2),
+                    user.map(_ => new Date((new java.util.Date()).getTime())).getOrElse(lastLogin),
+                    new Date((new java.util.Date()).getTime()),
+                    user.map(_ => 0).getOrElse(failedAttempts + 1)
+                  )
+                ),5 seconds)
+            } catch {
+              case e:Throwable => e.printStackTrace()
+            }
+            user.map{user =>
+              if (user.active) {
+                val loggedInUser = LoggedInUser(user.id, user.givenName, user.lastName, user.lastLogin)
+                Redirect(routes.Application.index()).withSession("user" -> Json.stringify(Json.toJson(loggedInUser)))
+              } else Ok(views.html.login.login(maxFailedAttempts))
+            }.getOrElse(Ok(views.html.login.login(invalidCredentials)))
+          }
+        }
+      }
+    )
+  }
+
+  def reset = Action {
+    Ok(views.html.login.reset(""))
+  }
+
+  def processreset = Action { implicit request =>
+    val form = Form(
+      tuple(
+        "email" -> text,
+        "reset" -> text,
+        "password" -> text
+      )
+    )
+
+    form.bindFromRequest.fold(
+      hasErrors => BadRequest(hasErrors.errors.mkString(", ")),
+      resetForm => {
+        val (email, reset, password) = resetForm
+
+        val uq = for {u <- usersTable.filter(u => u.email === email)} yield (u.password, u.resetKey, u.active, u.failedAttempts)
+
+        try {
+          Await.result(
+            db.run(uq.result).map {
+              users => {
+                if (users.length > 0) {
+                  val user = users.head
+                  val resetKey = user._2
+                  resetKey map {
+                    case reset => {
+                      try {
+                        Await.result(db.run(uq.update((Some(PasswordUtils.getHash(password)), None, true, 0))).map(_ => ()), 5 seconds)
+                      } finally {
+
+                      }
+
+                    }
+                  }
+                }
+              }
+            }, 5 seconds)
+          Ok(views.html.login.reset("Request submitted. Please try loging in in a few minutes."))
+        } catch {
+          case e:Throwable => {
+            e.printStackTrace()
+            Ok(views.html.login.reset("Request submitted. Please try loging in in a few minutes."))
+          }
+        }
+      }
+    )
+
+  }
+
+  def logout = Action {
+    Redirect(routes.Application.index()).withNewSession
+  }
+
   def scripts = Action {
-    import models.DbConfig.current.driver.api._
-    import models.Database._
+    import dao._
     import Events._
     import Agenda._
     import Locations._

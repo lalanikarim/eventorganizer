@@ -1,8 +1,10 @@
 package controllers
 
-import java.sql.{SQLType, Date}
+import java.sql.{Date, SQLType}
 import java.util
 
+import javax.inject._
+import models.DatabaseAO
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -13,13 +15,15 @@ import scala.concurrent.Future
 /**
   * Created by karim on 1/25/16.
   */
-class Event extends Controller {
-  import models.Database.Locations._
-  import models.Database.Events._
-  import models.Database.Agenda._
-  import models.Database.Contacts._
-  import models.DbConfig.current.db
-  import models.DbConfig.current.driver.api._
+@Singleton
+class Event @Inject() (dao: DatabaseAO) extends Controller {
+  import dao._
+  import Locations._
+  import Events._
+  import Agenda._
+  import Contacts._
+  import config.db
+  import config.driver.api._
 
   def index = Action.async { implicit request =>
     val l = for {l <- locationsTable.sortBy(_.id)} yield l

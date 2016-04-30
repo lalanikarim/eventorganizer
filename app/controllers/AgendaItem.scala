@@ -1,5 +1,7 @@
 package controllers
 
+import javax.inject._
+import models.DatabaseAO
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -10,12 +12,15 @@ import scala.concurrent.Future
 /**
   * Created by karim on 1/21/16.
   */
-class AgendaItem extends Controller {
-  import models.Database.Agenda._
-  import models.Database.Events._
+@Singleton
+class AgendaItem @Inject() (dao: DatabaseAO) extends Controller {
 
-  import models.DbConfig.current.driver.api._
-  import models.DbConfig.current.db
+  import dao._
+  import Agenda._
+  import Events._
+
+  import config.driver.api._
+  import config.db
   def index = Action.async {
 
     val agendaItems = for {

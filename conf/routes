@@ -5,6 +5,11 @@
 # Home page
 GET     /                           controllers.Application.index
 GET     /scripts                    controllers.Application.scripts
+GET     /login                      controllers.Application.nosession
+POST    /login                      controllers.Application.login
+GET     /reset                      controllers.Application.reset
+POST    /reset                      controllers.Application.processreset
+GET     /logout                     controllers.Application.logout
 
 GET     /location                   controllers.Location.index
 GET     /location/:id               controllers.Location.get(id: Int)

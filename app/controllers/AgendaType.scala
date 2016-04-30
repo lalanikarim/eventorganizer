@@ -1,8 +1,11 @@
 package controllers
 
+import javax.inject._
+import models.DatabaseAO
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
+import slick.driver.JdbcProfile
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.Future
@@ -10,10 +13,12 @@ import scala.concurrent.Future
 /**
   * Created by karim on 1/21/16.
   */
-class AgendaType extends Controller {
-  import models.Database.Agenda._
-  import models.DbConfig.current.db
-  import models.DbConfig.current.driver.api._
+@Singleton
+class AgendaType @Inject() (dao: DatabaseAO) extends Controller {
+  import dao._
+  import Agenda._
+  import config.db
+  import config.driver.api._
   def index = Action.async {
     db.run(agendaTypesTable.sortBy(_.id).result).map(
       agendaTypes => Ok(

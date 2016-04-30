@@ -3,6 +3,8 @@ package controllers
 import java.sql.DriverAction
 import javassist.tools.web.BadHttpRequest
 
+import javax.inject._
+import models.DatabaseAO
 import play.api.data._
 import play.api.data.validation.Constraints._
 import play.api.data.Forms._
@@ -14,13 +16,15 @@ import scala.concurrent.Future
 /**
   * Created by karim on 2/3/16.
   */
-class Contact extends Controller {
-  import models.Database.Locations._
-  import models.Database.Events._
-  import models.Database.Agenda._
-  import models.Database.Contacts._
-  import models.DbConfig.current.db
-  import models.DbConfig.current.driver.api._
+@Singleton
+class Contact @Inject() (dao: DatabaseAO) extends Controller {
+  import dao._
+  import Locations._
+  import Events._
+  import Agenda._
+  import Contacts._
+  import config.db
+  import config.driver.api._
 
   def index = Action.async { implicit request =>
     val cq = (for {
