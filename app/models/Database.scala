@@ -13,12 +13,12 @@ import slick.profile.SqlProfile.ColumnOption.SqlType
   * Created by karim on 1/20/16.
   */
 
-case class LoggedInUser(id: String, givenName: String, lastName: String,
-                        lastLogin: java.sql.Date)
+case class LoggedInUser(email: String, givenName: String, lastName: String,
+                        lastLogin: java.sql.Date, isAdmin: Boolean = false)
 
-case class User(id: String, givenName: String, lastName: String,
-                email: String, password: Option[String], failedAttempts: Int, lastLogin: java.sql.Date,
-                lastAttempt: java.sql.Date, active: Boolean, resetKey: Option[String])
+case class User(email: String, givenName: String, lastName: String,
+                password: Option[String], failedAttempts: Int, lastLogin: java.sql.Date,
+                lastAttempt: java.sql.Date, active: Boolean, resetKey: Option[String], isAdmin: Boolean = false)
 
 case class Location(id: Int, name: String)
 
@@ -243,21 +243,20 @@ class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
 
   object Users {
     class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
-      def id = column[String]("id", O.PrimaryKey, O.SqlType("VARCHAR(25)"))
+      def email = column[String]("email", O.PrimaryKey, O.SqlType("VARCHAR(50)"))
       def givenName = column[String]("givenName", O.SqlType("VARCHAR(25)"))
       def lastName = column[String]("lastName", O.SqlType("VARCHAR(25)"))
-      def email = column[String]("email", O.SqlType("VARCHAR(50)"))
       def password = column[Option[String]]("password", O.SqlType("VARCHAR(64)"))
       def failedAttempts = column[Int]("failedAttempts", O.Default(0))
       def lastLogin = column[java.sql.Date]("lastLogin")
       def lastAttempt = column[java.sql.Date]("lastAttempt")
       def active = column[Boolean]("active")
       def resetKey = column[Option[String]]("resetKey",O.SqlType("VARCHAR(50)"))
+      def isAdmin = column[Boolean]("isAdmin",O.Default(false))
 
       def * =
-        (id,givenName,lastName,email,
-          password,failedAttempts,lastLogin,
-          lastAttempt,active,resetKey) <> (User.tupled, User.unapply)
+        (email,givenName,lastName,password,failedAttempts,lastLogin,
+          lastAttempt,active,resetKey, isAdmin) <> (User.tupled, User.unapply)
     }
 
     val usersTable = TableQuery[UsersTable]

@@ -38,15 +38,12 @@ class CheckSession @Inject() (implicit val mat: Materializer, ec: ExecutionConte
         }
         case adminsession(p) => {
             loggedInUser.map {
-                user => user.id match {
-                  case "admin" => {
+                user => if (user.isAdmin) {
                     //println("Admin Session - Admin - " + p)
                     result
-                  }
-                  case _ => {
-                    //println("Admin Session - Non Admin - " + p )
-                    redirectToHome
-                  }
+                } else {
+                  //println("Admin Session - Non Admin - " + p )
+                  redirectToHome
                 }
             }.getOrElse({
               //println("Admin Session - No User - " + p)

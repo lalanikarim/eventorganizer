@@ -1,5 +1,6 @@
 @(event: models.Event, eventDays:String, eventAgendaItem: models.EventAgendaItem,
-    agendaType: models.AgendaType, assignments: Seq[Int], contacts: Seq[(models.Contact,String,String,Int,String,Option[Boolean])])
+    agendaType: models.AgendaType, assignments: Seq[Int], contacts: Seq[(models.Contact,String,String,Int,String,Option[Boolean])],
+    search:Option[String],total:Int,page:Int)
 <div class="col-md-8 col-sm-12">
     <h4>Choose Assignment</h4>
     <dl class="dl-horizontal">
@@ -10,15 +11,7 @@
         <dt>Assignment</dt>
         <dd>@agendaType.name</dd>
     </dl>
-    <div class="input-group col-md-4">
-        <input id="txtSearch" type="text" class="form-control" placeholder="Search for...">
-      <span class="input-group-btn">
-        <button class="btn btn-default" type="button" onclick="var search = $('#txtSearch').val();window.location='@routes.Event.getassignments(event.id,eventAgendaItem.id,None)?search=' + search">Go!</button>
-      </span>
-        <script type="text/javascript">
-            document.getElementById('txtSearch').value = getParameterByName('search');
-        </script>
-    </div>
+    @views.html.event.contactpager(event.id,eventAgendaItem.id,search,page,total)
     <table class="table table-striped">
         <thead>
         <tr>

@@ -35,13 +35,13 @@ class Account @Inject() (dao: DatabaseAO) {
 
     val uq = for { u <- usersTable} yield u
 
-    val userId = SessionUtils.getLoggedInUser.map(_.id).getOrElse("")
+    val userId = SessionUtils.getLoggedInUser.map(_.email).getOrElse("")
 
     db.run(uq.result).map {
       users =>
         val model = users.map{
           user =>
-            User(user.id, user.givenName,user.lastName,user.email,None,user.failedAttempts,user.lastLogin,user.lastAttempt,user.active,user.resetKey)
+            User(user.email, user.givenName,user.lastName,None,user.failedAttempts,user.lastLogin,user.lastAttempt,user.active,user.resetKey)
         }
         Ok(views.html.index("Accounts")(views.html.account.list(model,userId)))
     }. recover {
@@ -60,12 +60,12 @@ class Account @Inject() (dao: DatabaseAO) {
     Future successful Ok
   }
 
-  def setactive(id: String, active: Boolean) = Action { implicit request =>
+  def setactive(email: String, active: Boolean) = Action { implicit request =>
     val loggedInUser = SessionUtils.getLoggedInUser
-    val uq = for { u <- usersTable.filter(u => u.id === id && u.active =!= active)} yield u.active
+    val uq = for { u <- usersTable.filter(u => u.email === email && u.active =!= active)} yield u.active
     loggedInUser.map {
       user =>
-        if (id != user.id) {
+        if (email != user.email) {
           try {
             Await.result(db.run(uq.update(active)),5 seconds)
           } catch {

@@ -158,11 +158,11 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
     form.bindFromRequest.fold(
       hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
       loginForm => {
-        val (userid,password) = loginForm
+        val (email,password) = loginForm
 
-        val uq = for { u <- usersTable.filter(u => u.id === userid && u.failedAttempts < 2 &&
+        val uq = for { u <- usersTable.filter(u => u.email === email && u.failedAttempts < 2 &&
           u.password === PasswordUtils.getHash(password)) } yield u
-        val uuq = for { u <- usersTable.filter(_.id === userid) } yield (u.active, u.lastLogin, u.lastAttempt, u.failedAttempts)
+        val uuq = for { u <- usersTable.filter(_.email === email) } yield (u.active, u.lastLogin, u.lastAttempt, u.failedAttempts)
 
         for {
           u <- db.run(uq.result)
@@ -188,7 +188,7 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
             }
             user.map{user =>
               if (user.active) {
-                val loggedInUser = LoggedInUser(user.id, user.givenName, user.lastName, user.lastLogin)
+                val loggedInUser = LoggedInUser(user.email, user.givenName, user.lastName, user.lastLogin)
                 Redirect(routes.Application.index()).withSession("user" -> Json.stringify(Json.toJson(loggedInUser)))
               } else Ok(views.html.login.login(maxFailedAttempts))
             }.getOrElse(Ok(views.html.login.login(invalidCredentials)))
@@ -203,18 +203,19 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def processreset = Action { implicit request =>
+    case class ResetForm(email: String, reset: String, password: String)
     val form = Form(
-      tuple(
-        "email" -> text,
-        "reset" -> text,
-        "password" -> text
-      )
+      mapping(
+        "email" -> email,
+        "reset" -> nonEmptyText,
+        "password" -> nonEmptyText
+      )(ResetForm.apply)(ResetForm.unapply)
     )
 
     form.bindFromRequest.fold(
-      hasErrors => BadRequest(hasErrors.errors.mkString(", ")),
+      hasErrors => BadRequest(views.html.login.reset("Invalid form submission: " +  hasErrors.errors.mkString(", "))),
       resetForm => {
-        val (email, reset, password) = resetForm
+        val (email, reset, password) = (resetForm.email, resetForm.reset, resetForm.password)
 
         val uq = for {u <- usersTable.filter(u => u.email === email)} yield (u.password, u.resetKey, u.active, u.failedAttempts)
 
@@ -238,11 +239,11 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
                 }
               }
             }, 5 seconds)
-          Ok(views.html.login.reset("Request submitted. Please try loging in in a few minutes."))
+          Ok(views.html.login.reset("Request submitted. Please try loging in in a few minutes.",false))
         } catch {
           case e:Throwable => {
             e.printStackTrace()
-            Ok(views.html.login.reset("Request submitted. Please try loging in in a few minutes."))
+            Ok(views.html.login.reset("Error encountered. Please try again later."))
           }
         }
       }

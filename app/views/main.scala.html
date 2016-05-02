@@ -33,7 +33,7 @@
                         <li><hr/></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        @if(user.map(_.id).getOrElse("") == "admin") {
+                        @if(user.map(_.isAdmin).getOrElse(false)) {
                         <li><a href="@routes.Account.list()">Accounts</a></li>
                         }
                         <li><a href="@routes.Location.index()">Locations</a></li>

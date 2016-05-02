@@ -1,50 +1,23 @@
 @(msg: String)
-<!DOCTYPE html>
-
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Event Organizer | Login</title>
-        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/main.css")">
-        <link rel="shortcut icon" type="image/png" href="@routes.Assets.versioned("images/favicon.png")">
-        <link rel="stylesheet" href='@routes.Assets.versioned("lib/bootstrap/css/bootstrap.min.css")'>
-        <link rel="stylesheet" href='@routes.Assets.versioned("lib/bootstrap-datepicker/css/bootstrap-datepicker.min.css")'>
-        <script src='@routes.Assets.versioned("javascripts/hello.js")' type="text/javascript"></script>
-    </head>
-    <body>
-        <div class="col-md-5 hidden-sm"></div>
-        <div class="col-md-2 col-sm-12">
-            <div class="row top-buffer"></div>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">Login</h3>
-                </div>
-                <div class="panel-body">
-                    <form action="@routes.Application.login"  method="post">
-                        <div class="form-group">
-                            <label for="login">Login</label>
-                            <input id="login" name="login" class="form-control" placeholder="Login">
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input id="password" name="password" class="form-control" placeholder="Password" type="password">
-                        </div>
-                        <div>
-                            <button class="btn btn-sm" type="submit">Login</button><a class="btn btn-sm" href="@routes.Application.reset">Reset Password</a>
-                        </div>
-                    </form>
-                    @if(msg.length > 0) {
-                    <div class="alert alert-danger">@msg</div>
-                     }
-                </div>
+@views.html.login.main(msg) {
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Login</h3>
+    </div>
+    <div class="panel-body">
+        <form action="@routes.Application.login"  method="post">
+            <div class="form-group">
+                <label for="login">Login</label>
+                <input id="login" name="login" class="form-control" placeholder="Login">
             </div>
-        </div>
-        <div class="col-md-5 hidden-sm"></div>
-        <script type="text/javascript" src='@routes.Assets.versioned("lib/jquery/jquery.min.js")'></script>
-        <script type="text/javascript" src='@routes.Assets.versioned("lib/bootstrap/js/bootstrap.min.js")'></script>
-        <script type="text/javascript" src='@routes.Assets.versioned("lib/bootstrap-datepicker/js/bootstrap-datepicker.min.js")'></script>
-        <script src='@routes.Assets.versioned("javascripts/datepicker.js")' type="text/javascript"></script>
-    </body>
-</html>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input id="password" name="password" class="form-control" placeholder="Password" type="password">
+            </div>
+            <div>
+                <button class="btn btn-sm" type="submit">Login</button><a class="btn btn-sm" href="@routes.Application.reset">Reset Password</a>
+            </div>
+        </form>
+    </div>
+</div>
+}

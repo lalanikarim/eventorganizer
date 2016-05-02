@@ -1,0 +1,47 @@
+@(eventId: Int, agendaItemId: Int, search: Option[String], page:Int,total:Int)
+<div class="col-md-4">
+    <div class="input-group">
+    <input id="txtSearch" type="text" class="form-control" placeholder="Search for...">
+    <span class="input-group-btn">
+        <button class="btn btn-default" type="button" onclick="var search = $('#txtSearch').val();window.location='@routes.Event.getassignments(eventId,agendaItemId,None,None)?search=' + search">Go!</button>
+    </span>
+    </div>
+</div>
+<div class="col-md-8">
+    <nav>
+        <ul class="pagination" style="margin:0">
+            <li>
+                <a href='@if(page > 1) {
+                @routes.Event.getassignments(eventId,agendaItemId,search,Some(page - 1))
+                } else {
+                #
+                }' aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for(p <- 1 to total) {
+            <li
+                    @if(page == p) {
+                    class="active"
+                    }
+            ><a href="@if(page != p) {
+                @routes.Event.getassignments(eventId,agendaItemId,search,Some(p))
+                } else {
+                #
+                }">@p</a></li>
+            }
+            <li>
+                <a href='@if(page < total) {
+                @routes.Event.getassignments(eventId,agendaItemId,search,Some(page + 1))
+                } else {
+                #
+                }' aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+<script type="text/javascript">
+    document.getElementById('txtSearch').value = getParameterByName('search');
+</script>

@@ -279,8 +279,11 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
     }
   }
 
-  def getassignments(id: Int, eventAgendaItemId: Int, search: Option[String]) = Action.async { implicit request =>
+  def getassignments(id: Int, eventAgendaItemId: Int, search: Option[String], page: Option[Int]) = Action.async { implicit request =>
+
     implicit val loggedInUser = SessionUtils.getLoggedInUser
+
+    val MAXPERPAGE = 5
 
     val age = SimpleFunction.unary[Date,String]("age")
     val currentDate = SimpleLiteral[Date]("CURRENT_DATE")
@@ -349,6 +352,8 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
       c.givenName -> c.lastName
     }
 
+    //val cq = page.map(p => if(p > 0) cqall.drop((p - 1) * MAXPERPAGE).take(MAXPERPAGE) else cqall).getOrElse(cqall)
+
     (for {
       e <- db.run(eq.result)
       ea <- db.run(eaq.result)
@@ -379,7 +384,9 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
           else
             (sc :+ contact.id, sr :+ i)
         }
-        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,a,cFlat),views.html.contact.add()))))
+        val cPaged = cFlat.drop((page.getOrElse(1) -1) * MAXPERPAGE).take(MAXPERPAGE)
+        val total = (cFlat.length/MAXPERPAGE + (if (cFlat.length % MAXPERPAGE > 0) 1 else 0)).toInt
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,a,cPaged,search,total,page.getOrElse(0)),views.html.contact.add()))))
       } else {
         NotFound
       }

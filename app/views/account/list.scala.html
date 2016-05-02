@@ -1,11 +1,10 @@
-@(users: Seq[models.User], userId: String)
+@(users: Seq[models.User],userId: String)
 <div class="row">
     <table class="table">
         <thead>
         <tr>
             <th>Login</th>
             <th>Name</th>
-            <th>Email</th>
             <th>Last Login</th>
             <th>Last Attempt</th>
             <th>Failed Attempts</th>
@@ -15,15 +14,14 @@
         <tbody>
         @for(u <- users) {
         <tr>
-            <td>@u.id</td>
-            <td>@u.givenName @u.lastName</td>
             <td>@u.email</td>
+            <td>@u.givenName @u.lastName</td>
             <td>@u.lastLogin</td>
             <td>@u.lastAttempt</td>
             <td>@u.failedAttempts</td>
             <td>
-                @if(userId != u.id) {
-                <a href="@routes.Account.setactive(u.id,!u.active)">
+                @if(userId != u.email) {
+                <a href="@routes.Account.setactive(u.email,!u.active)">
                     @if(u.active) {
                     Deactivate
                     } else {
