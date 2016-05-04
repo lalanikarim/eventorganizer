@@ -1,0 +1,51 @@
+@(eventId: Int, eventAgendaItemId: Int, eventDays: String, contacts: Seq[AssignmentContact], assigned: Boolean)
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>
+        </th>
+        <th>Prefer</th>
+        <th>Last Assignment<br/>Self</th>
+        <th>Last Assignment<br/>From Group</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+
+    @for(ac <- contacts){
+    <tr>
+        <td><a href="@routes.Contact.get(ac.contact.id)">@ac.contact.givenName @ac.contact.lastName</a></td>
+        <td>
+            @if(ac.optPref.isDefined){
+            @if(ac.optPref.get){
+            <span class="glyphicon glyphicon-ok text-success"></span>
+            } else {
+            <span class="glyphicon glyphicon-remove text-danger"></span>
+            }
+            }
+        </td>
+        <td>
+            @if(ac.hs.length > 0){
+            <a href="@routes.Event.assignments(ac.hse)">
+                @if(ac.hs == eventDays){
+                <strong class="text-primary">@ac.hs<br/>(@ac.hsat)</strong>
+                } else {
+                @ac.hs<br/>(@ac.hsat)
+                }
+            </a>
+            }
+        </td>
+        <td>
+            @ac.hg
+        </td>
+        <td>
+            @if(assigned) {
+            <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(eventId,eventAgendaItemId,ac.contact.id)">Remove</a>
+            } else {
+            <a class="btn btn-primary btn-sm" href="@routes.Event.assign(eventId,eventAgendaItemId,ac.contact.id)">Assign</a>
+            }
+        </td>
+    </tr>
+    }
+    </tbody>
+</table>

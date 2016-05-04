@@ -4,7 +4,7 @@ import java.sql.{Date, SQLType}
 import java.util
 import javax.inject._
 
-import models.{DatabaseAO, SessionUtils}
+import models.{AssignmentContact, DatabaseAO, SessionUtils}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
@@ -336,14 +336,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
     }
 
     val cq = (for {
-      (((c,cp),hs),hg) <- (search match {
-        case Some(term) => contactsTable.filter(c =>
-          c.givenName.toLowerCase.startsWith(term.toLowerCase) ||
-          c.lastName.toLowerCase.startsWith(term.toLowerCase) ||
-          c.groupId.toLowerCase.startsWith(term.toLowerCase)
-        )
-        case None => contactsTable
-      }) joinLeft
+      (((c,cp),hs),hg) <- contactsTable joinLeft
       cpq on (_.id === _._1) joinLeft
       hsAgendaType on (_._1.id === _._1) joinLeft
       historyGroup on (_._1._1.id === _._1)
@@ -351,8 +344,6 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
       val (c,hs,hsat,hse,hg,cp) = r
       c.givenName -> c.lastName
     }
-
-    //val cq = page.map(p => if(p > 0) cqall.drop((p - 1) * MAXPERPAGE).take(MAXPERPAGE) else cqall).getOrElse(cqall)
 
     (for {
       e <- db.run(eq.result)
@@ -373,20 +364,31 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
           case _ => str
         }
 
-        val (_,cFlat) = ((Seq[Int](),Seq[(models.Contact,String,String,Int,String,Option[Boolean])]()) /: (c map { item =>
+        val (_,cFlat) = ((Seq[Int](),Seq[AssignmentContact]()) /: (c map { item =>
           val (contact, hs, hsat,hse, hg, cp) = item
-          (contact,clean(flatten(hs)),hsat.getOrElse(""),hse.getOrElse(-1),clean(flatten(hg)),cp)
+          AssignmentContact(contact,clean(flatten(hs)),hsat.getOrElse(""),hse.getOrElse(-1),clean(flatten(hg)),cp)
         })){(c,i) =>
           val (sc,sr) = c
-          val (contact, hs, hsat,hse, hg, cp) = i
-          if (sc.contains(contact.id))
+          //val (contact, hs, hsat,hse, hg, cp) = i
+          if (sc.contains(i.contact.id))
             c
           else
-            (sc :+ contact.id, sr :+ i)
+            (sc :+ i.contact.id, sr :+ i)
         }
-        val cPaged = cFlat.drop((page.getOrElse(1) -1) * MAXPERPAGE).take(MAXPERPAGE)
-        val total = (cFlat.length/MAXPERPAGE + (if (cFlat.length % MAXPERPAGE > 0) 1 else 0)).toInt
-        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,a,cPaged,search,total,page.getOrElse(0)),views.html.contact.add()))))
+
+        val assigned = cFlat.filter(c => a.contains(c.contact.id))
+        val contacts = cFlat.filter(c => !a.contains(c.contact.id)).
+          filter(c => search.
+            map(s => c.contact.givenName.toLowerCase.contains(s.toLowerCase) ||
+            c.contact.lastName.toLowerCase.contains(s.toLowerCase) ||
+            c.contact.groupId.map(g => g.toLowerCase.contains(s.toLowerCase)).getOrElse(false)).
+            getOrElse(true)
+          )
+
+        val contactsPaged = contacts.drop((page.getOrElse(1) -1) * MAXPERPAGE).take(MAXPERPAGE)
+
+        val total = (contacts.length/MAXPERPAGE + (if (contacts.length % MAXPERPAGE > 0) 1 else 0)).toInt
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,assigned,contactsPaged,search,total,page.getOrElse(0)),views.html.contact.add()))))
       } else {
         NotFound
       }

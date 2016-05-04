@@ -1,5 +1,5 @@
 @(event: models.Event, eventDays:String, eventAgendaItem: models.EventAgendaItem,
-    agendaType: models.AgendaType, assignments: Seq[Int], contacts: Seq[(models.Contact,String,String,Int,String,Option[Boolean])],
+    agendaType: models.AgendaType, assignments: Seq[AssignmentContact], contacts: Seq[AssignmentContact],
     search:Option[String],total:Int,page:Int)
 <div class="col-md-8 col-sm-12">
     <h4>Choose Assignment</h4>
@@ -11,64 +11,7 @@
         <dt>Assignment</dt>
         <dd>@agendaType.name</dd>
     </dl>
+    @views.html.event.contacttable(event.id,eventAgendaItem.id,eventDays,assignments,true)
     @views.html.event.contactpager(event.id,eventAgendaItem.id,search,page,total)
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>
-
-            </th>
-            <th>Prefer</th>
-            <th>Last Assignment<br/>Self</th>
-            <th>Last Assignment<br/>From Group</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-
-        @for((contact,hs,hsat,hse,hg, optPref) <- contacts){
-        <tr
-        @if(assignments.contains(contact.id)){
-        class="info"
-        }
-        >
-            <td><a href="@routes.Contact.get(contact.id)">@contact.givenName @contact.lastName</a></td>
-            <td>
-            @if(optPref.isDefined){
-                @if(optPref.get){
-                <span class="glyphicon glyphicon-ok text-success"></span>
-                } else {
-                <span class="glyphicon glyphicon-remove text-danger"></span>
-                }
-            }
-            </td>
-            <td>
-                @if(hs.length > 0){
-                    <a href="@routes.Event.assignments(hse)">
-                    @if(hs == eventDays){
-                        <strong class="text-primary">@hs<br/>(@hsat)</strong>
-                    } else {
-                        @hs<br/>(@hsat)
-                    }
-                    </a>
-                }
-            </td>
-            <td>
-                @hg
-            </td>
-            <td>
-                @if(assignments.length > 0) {
-                    @if(!assignments.contains(contact.id)) {
-                        <a class="btn btn-danger btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Add</a>
-                    } else {
-                        <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(event.id,eventAgendaItem.id,contact.id)">Remove</a>
-                    }
-                } else {
-                    <a class="btn btn-primary btn-sm" href="@routes.Event.assign(event.id,eventAgendaItem.id,contact.id)">Assign</a>
-                }
-            </td>
-        </tr>
-        }
-        </tbody>
-    </table>
+    @views.html.event.contacttable(event.id,eventAgendaItem.id,eventDays,contacts,false)
 </div>
