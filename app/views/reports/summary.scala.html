@@ -1,0 +1,22 @@
+@(report: Seq[Seq[String]])
+<div class="row">
+    <h2>Summary Report</h2>
+    <table class="table">
+        <thead>
+        <tr>
+            @for(header <- report.head){
+            <th>@header</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        @for(row <- report.tail){
+        <tr>
+            @for(field <- row){
+            <td>@field</td>
+            }
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>
