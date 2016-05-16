@@ -148,7 +148,7 @@ class EventType @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def moveagendaitem (id: Int, oldItemId: Int, newItemId: Int) = Action.async { implicit request =>
-    println(id.toString + " " + oldItemId + " " + newItemId)
+    //println(id.toString + " " + oldItemId + " " + newItemId)
     val q1 = for { a <- agendaItemsTable if (a.id === oldItemId && a.eventTypeId === id)} yield a.id
     val q2 = for { a <- agendaItemsTable if (a.id === newItemId && a.eventTypeId === id)} yield a.id
     val q3 = for { a <- agendaItemsTable if (a.id === -oldItemId && a.eventTypeId === id)} yield a.id

@@ -1,7 +1,8 @@
-@(report: Seq[Seq[String]])
+@(report: Seq[Seq[String]],year: Int, eventTypeId: Int, page: Int, total: Int)
 <div class="row">
     <h2>Summary Report</h2>
-    <table class="table">
+    @views.html.reports.pager(routes.Report.getSummaryReportGet(eventTypeId,year,None).url,total,page)
+    <table class="table table-condensed">
         <thead>
         <tr>
             @for(header <- report.head){

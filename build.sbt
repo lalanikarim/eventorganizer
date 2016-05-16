@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   "org.webjars" % "bootstrap-datepicker" % "1.5.0-1",
   "com.typesafe.play" %% "play-slick" % "2.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
-  "org.postgresql" % "postgresql" % "9.4.1207"
+  "mysql" % "mysql-connector-java" % "5.1.38"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"

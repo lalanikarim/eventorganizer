@@ -22,7 +22,7 @@ class CheckSession @Inject() (implicit val mat: Materializer, ec: ExecutionConte
     val loggedInUser = SessionUtils.getLoggedInUser(requestHeader)
 
     val assetregex = """/assets/(.*)""".r
-    val loginsession = """/(scripts|reset|login|logout|register)$""".r
+    val loginsession = """/(scripts|reset|login|logout|register|setup)$""".r
     val adminsession = """/account(.*)""".r
     val indexsession = """/""".r
 

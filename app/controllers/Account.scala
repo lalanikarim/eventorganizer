@@ -39,10 +39,7 @@ class Account @Inject() (dao: DatabaseAO) {
 
     db.run(uq.result).map {
       users =>
-        val model = users.map{
-          user =>
-            User(user.email, user.givenName,user.lastName,None,user.failedAttempts,user.lastLogin,user.lastAttempt,user.active,user.resetKey)
-        }
+        val model = users.map(_.noPassword)
         Ok(views.html.index("Accounts")(views.html.account.list(model,userId)))
     }. recover {
       case e:Throwable => {

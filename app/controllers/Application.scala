@@ -18,7 +18,7 @@ import scala.concurrent.{Await, Future}
 import play.api.libs.json._
 
 @Singleton
-class Application @Inject() (dao: DatabaseAO) extends Controller {
+class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configuration) extends Controller {
 
   import dao._
   import Locations._
@@ -168,18 +168,18 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
           u <- db.run(uq.result)
           uu <- db.run(uuq.result)
         } yield {
-          if (uu.length == 0)
+          if (uu.isEmpty)
             Ok(views.html.login.login(invalidCredentials))
           else {
             val (active, lastLogin, lastAttempt, failedAttempts) = uu.head
-            val user = if (u.length == 0) None else Some(u.head)
+            val user = u.headOption
             try {
               Await.result(
                 db.run(
                   uuq.update(
                     user.map(_ => active).getOrElse(active && failedAttempts < 2),
-                    user.map(_ => new Date((new java.util.Date()).getTime())).getOrElse(lastLogin),
-                    new Date((new java.util.Date()).getTime()),
+                    user.map(_ => new Date((new java.util.Date).getTime)).getOrElse(lastLogin),
+                    new Date((new java.util.Date).getTime),
                     user.map(_ => 0).getOrElse(failedAttempts + 1)
                   )
                 ),5 seconds)
@@ -188,7 +188,7 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
             }
             user.map{user =>
               if (user.active) {
-                val loggedInUser = LoggedInUser(user.email, user.givenName, user.lastName, user.lastLogin)
+                val loggedInUser = user.toLoggedInUser
                 Redirect(routes.Application.index()).withSession("user" -> Json.stringify(Json.toJson(loggedInUser)))
               } else Ok(views.html.login.login(maxFailedAttempts))
             }.getOrElse(Ok(views.html.login.login(invalidCredentials)))
@@ -223,13 +223,13 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
           Await.result(
             db.run(uq.result).map {
               users => {
-                if (users.length > 0) {
+                if (users.nonEmpty) {
                   val user = users.head
                   val resetKey = user._2
                   resetKey map {
                     case reset => {
                       try {
-                        Await.result(db.run(uq.update((Some(PasswordUtils.getHash(password)), None, true, 0))).map(_ => ()), 5 seconds)
+                        Await.result(db.run(uq.update((Some(PasswordUtils.getHash(password)), None, true, 0))), 5 seconds)
                       } finally {
 
                       }
@@ -279,5 +279,91 @@ class Application @Inject() (dao: DatabaseAO) extends Controller {
 
     Ok(views.html.index("Scripts")(Html("<pre>" + creates + drops + "</pre>")))
 
+  }
+
+  def setup = Action.async { implicit request =>
+    import scala.collection.JavaConversions._
+
+    val confUsers = configuration.getConfigList("setup.users").map{ confUsers =>
+      confUsers.flatMap{ confUser =>
+        val email = confUser.getString("email")
+        val givenName = confUser.getString("givenName")
+        val lastName = confUser.getString("lastName")
+        val reset = confUser.getString("reset")
+
+        val now = new Date((new java.util.Date).getTime)
+
+        email.map(email => givenName.map(givenName => lastName.map{lastName =>
+          List(models.User(0,email,givenName,lastName,None,0,now,now,true,reset,true))
+        }.getOrElse(Nil)).getOrElse(Nil)).getOrElse(Nil)
+
+      }
+    }.getOrElse(Nil)
+
+    val agendaTypes = configuration.getConfigList("setup.agendaTypes").map{ agendaTypes =>
+      agendaTypes.flatMap{ agendaType =>
+        val id = agendaType.getInt("id")
+        val name = agendaType.getString("name")
+        name.map(name => id.map(id => models.AgendaType(id,name,None) :: Nil).getOrElse(Nil)).getOrElse(Nil)
+      }
+    }.getOrElse(Nil)
+
+    val eventTypes = configuration.getConfigList("setup.eventTypes").map { eventTypes =>
+      eventTypes.flatMap{ eventType =>
+        val eid = eventType.getInt("id")
+        val name = eventType.getString("name")
+
+        eid.map { eid =>
+          name.map (name => models.EventType(eid,name) :: Nil).getOrElse(Nil)
+        }.getOrElse(Nil)
+      }
+    }.getOrElse(Nil)
+
+    val eventAgendaItems = configuration.getConfigList("setup.eventTypes").map{ eventTypes =>
+      eventTypes.flatMap{ eventType =>
+        val eid = eventType.getInt("id")
+        val name = eventType.getString("name")
+        val agenda = eventType.getIntList("agenda")
+
+        eid.map { eid =>
+          name.map { name =>
+            agenda.map { agenda =>
+              val (c,i) = (agenda :\(Seq[models.AgendaItem](), agenda.length)) { (i, c) =>
+                val (l, aid) = c
+                (l :+ models.AgendaItem(aid, eid, i), aid - 1)
+              }
+              c
+            }.getOrElse(Nil)
+          }.getOrElse(Nil)
+        }.getOrElse(Nil)
+      }
+    }.getOrElse(Nil)
+
+
+    val userCount = (for (u <- usersTable) yield u) groupBy(_.id) map { agg =>
+      val (id,u) = agg
+      u.length
+    }
+
+    db.run(userCount.result).map { count =>
+      //if (count == 0) {
+        try {
+          Await.result(db.run(DBIO.seq(
+            usersTable ++= confUsers,
+            agendaTypesTable ++= agendaTypes,
+            eventTypesTable ++= eventTypes,
+            agendaItemsTable ++= eventAgendaItems
+          )), 5 seconds)
+          Ok
+        } catch {
+          case e:Throwable => {
+            e.printStackTrace()
+            BadRequest(e.getMessage)
+          }
+        }
+      //} else Redirect(routes.Application.index())
+    }
+
+    //Future successful Ok
   }
 }
