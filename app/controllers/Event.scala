@@ -283,16 +283,16 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
 
     implicit val loggedInUser = SessionUtils.getLoggedInUser
 
-    val MAXPERPAGE = 5
+    val MAXPERPAGE = 20
 
-    val age = SimpleFunction.unary[Date,String]("age")
-    val currentDate = SimpleLiteral[Date]("CURRENT_DATE")
+    val age = SimpleFunction.binary[Date,Date,Int]("datediff")
+    val currentDate = SimpleLiteral[Date]("curdate()")
 
     val now = new util.Date()
     val sqlNow = new Date(now.getTime)
 
 
-    val eq = for { e <- eventsTable.filter(_.id === id) } yield (e -> age(e.date))
+    val eq = for { e <- eventsTable.filter(_.id === id) } yield (e -> age(currentDate, e.date))
     val eaq = for { (eai,at) <- eventAgendaItemsTable.filter(eai =>
       eai.id === eventAgendaItemId && eai.eventId === id) join
       agendaTypesTable on (_.agendaTypeId === _.id) } yield (eai,at)
@@ -323,7 +323,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
         val (cid,optDate) = agg
         optDate.isDefined && optDate === e.date && cid === c.id
       }
-    } yield (c.id,agg._2.map(d => age(d)),at.name,e.id)
+    } yield (c.id,agg._2.map(d => age(currentDate,d)),at.name,e.id)
 
     val historyGroup = (for {
       (((c1,h),e),c) <- contactsTable join
@@ -332,7 +332,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
         contactsTable on ((h,c) => h._1._1.id =!= c.id && h._1._1.groupId === c.groupId)
     } yield (c.id -> e.date)
       ) groupBy(_._1) map {
-      case (cid,agg) => (cid -> agg.map(_._2).max.map(d => age(d)))
+      case (cid,agg) => (cid -> agg.map(_._2).max.map(d => age(currentDate, d)))
     }
 
     val cq = (for {
@@ -354,19 +354,26 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
       if (e.size > 0 && ea.size > 0){
         val (eai, at) = ea.head
 
-        val negAge = "^-(.*)"r
-        val posAge = "^([0-9].*)".r
-        def flatten(ooStr: Option[Option[String]]) = ooStr.map(_.getOrElse("")).getOrElse("")
-        def clean(str: String) = str match {
-          case "00:00:00" => "Today"
-          case negAge(date) => "In " + date
-          case posAge(date) => date + " ago"
-          case _ => str
+        def flatten(ooStr: Option[Option[Int]]) = ooStr.map(_.getOrElse(0))
+
+        def resolveDays(days: Int): String = {
+          val absDays = Math.abs(days)
+
+          if (absDays == 0) ""
+          else if (absDays < 30) s"$absDays days"
+          else if (absDays < 365) s"${(absDays / 30).toInt} months ${resolveDays(absDays % 30)}"
+          else s"${(absDays / 365).toInt} years ${resolveDays(absDays % 365)}"
+        }
+
+        def clean(dateDiff: Int) = {
+          if (dateDiff == 0) "Today"
+          else if (dateDiff < 0) s"In ${resolveDays(dateDiff)}"
+          else s"${resolveDays(dateDiff)} ago"
         }
 
         val (_,cFlat) = ((Seq[Int](),Seq[AssignmentContact]()) /: (c map { item =>
           val (contact, hs, hsat,hse, hg, cp) = item
-          AssignmentContact(contact,clean(flatten(hs)),hsat.getOrElse(""),hse.getOrElse(-1),clean(flatten(hg)),cp)
+          AssignmentContact(contact,flatten(hs).map(clean).getOrElse(""),hsat.getOrElse(""),hse.getOrElse(-1),flatten(hg).map(clean).getOrElse(""),cp)
         })){(c,i) =>
           val (sc,sr) = c
           //val (contact, hs, hsat,hse, hg, cp) = i

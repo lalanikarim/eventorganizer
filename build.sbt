@@ -15,6 +15,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.play" %% "play-slick" % "2.0.0",
   "com.typesafe.play" %% "play-slick-evolutions" % "2.0.0",
   "mysql" % "mysql-connector-java" % "5.1.38"
+  //"org.postgresql" % "postgresql" % "9.4.1207"
 )
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
