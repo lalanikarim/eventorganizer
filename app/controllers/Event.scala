@@ -279,7 +279,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
     }
   }
 
-  def getassignments(id: Int, eventAgendaItemId: Int, search: Option[String], page: Option[Int]) = Action.async { implicit request =>
+  def getassignments(id: Int, eventAgendaItemId: Int, onlyPrefered: Option[Boolean], search: Option[String], page: Option[Int]) = Action.async { implicit request =>
 
     implicit val loggedInUser = SessionUtils.getLoggedInUser
 
@@ -290,7 +290,6 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
 
     val now = new util.Date()
     val sqlNow = new Date(now.getTime)
-
 
     val eq = for { e <- eventsTable.filter(_.id === id) } yield (e -> age(currentDate, e.date))
     val eaq = for { (eai,at) <- eventAgendaItemsTable.filter(eai =>
@@ -384,7 +383,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
         }
 
         val assigned = cFlat.filter(c => a.contains(c.contact.id))
-        val contacts = cFlat.filter(c => !a.contains(c.contact.id)).
+        val contacts = cFlat.filter(c => !a.contains(c.contact.id) && onlyPrefered.map(_ => c.optPref.getOrElse(false)).getOrElse(true)).
           filter(c => search.
             map(s => c.contact.givenName.toLowerCase.contains(s.toLowerCase) ||
             c.contact.lastName.toLowerCase.contains(s.toLowerCase) ||
@@ -395,7 +394,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
         val contactsPaged = contacts.drop((page.getOrElse(1) -1) * MAXPERPAGE).take(MAXPERPAGE)
 
         val total = (contacts.length/MAXPERPAGE + (if (contacts.length % MAXPERPAGE > 0) 1 else 0)).toInt
-        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,assigned,contactsPaged,search,total,page.getOrElse(0)),views.html.contact.add()))))
+        Ok(views.html.index("Event Agenda Assignment")(views.html.aggregator(Seq( views.html.event.addassignment(e.head._1,clean(e.head._2),eai,at,assigned,contactsPaged, search,total,page.getOrElse(0),onlyPrefered),views.html.contact.add()))))
       } else {
         NotFound
       }
@@ -408,26 +407,32 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def assign(id: Int, eaiId: Int, contactId: Int) = Action.async { implicit request =>
-    (db.run(eventAgendaItemContactsTable += models.EventAgendaItemContact(id = eaiId, eventId = id, contactId = contactId)).map {
-      _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
-    }) recover {
-      case e:Throwable => {
-        e.printStackTrace()
-        BadRequest
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+    loggedInUser.map { user =>
+      (db.run(eventAgendaItemContactsTable += models.EventAgendaItemContact(id = eaiId, eventId = id, contactId = contactId, userId = user.id)).map {
+        _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
+      }) recover {
+        case e: Throwable => {
+          e.printStackTrace()
+          BadRequest
+        }
       }
-    }
+    }.getOrElse(Future successful Unauthorized)
   }
 
   def unassign(id: Int, eaiId: Int, contactId: Int) = Action.async { implicit request =>
-    val aq = for { eai <- eventAgendaItemContactsTable.filter(eai => eai.eventId === id && eai.id === eaiId && eai.contactId === contactId) } yield eai
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+    loggedInUser.map { _ =>
+      val aq = for {eai <- eventAgendaItemContactsTable.filter(eai => eai.eventId === id && eai.id === eaiId && eai.contactId === contactId)} yield eai
 
-    (db.run(aq.delete).map {
-      _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
-    }) recover {
-      case e:Throwable => {
-        e.printStackTrace()
-        BadRequest
+      (db.run(aq.delete).map {
+        _ => Redirect(request.headers.get("referer").getOrElse(routes.Event.assignments(id).absoluteURL()))
+      }) recover {
+        case e: Throwable => {
+          e.printStackTrace()
+          BadRequest
+        }
       }
-    }
+    }.getOrElse(Future successful Unauthorized)
   }
 }

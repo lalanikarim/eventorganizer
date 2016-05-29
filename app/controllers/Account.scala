@@ -1,8 +1,11 @@
 package controllers
 
+import java.sql.Date
 import javax.inject._
 
-import models.{DatabaseAO, SessionUtils, User}
+import models.{DatabaseAO, PasswordUtils, SessionUtils, User}
+import play.api.data.Form
+import play.api.data.Forms._
 import play.api.mvc._
 
 import scala.concurrent._
@@ -22,12 +25,34 @@ class Account @Inject() (dao: DatabaseAO) {
   import config.db
   import config.driver.api._
 
-  def register = Action {
-    Ok
+  def register = Action { implicit request =>
+    Ok(views.html.login.main("Register")(views.html.account.register(None,None,None)))
   }
 
   def processregister = Action.async { implicit request =>
-    Future successful Ok
+    val form = Form(
+      tuple(
+        "email" -> email,
+        "givenName" -> nonEmptyText,
+        "lastName" -> nonEmptyText,
+        "password" -> nonEmptyText
+      )
+    )
+    form.bindFromRequest.fold(
+      hasErrors => Future successful BadRequest,
+      registerForm => {
+        val (email,givenName,lastName,password) = registerForm
+        val now = new Date((new java.util.Date()).getTime)
+        db.run(Users.usersTable += User(0,email,givenName,lastName,Some(PasswordUtils.getHash(password)),0,now,now,false,None,false)).map {
+          _ => Ok(views.html.login.main("Register","Thank you for registering. Your account will be activated shortly.",false)(views.html.account.register(None,None,None)))
+        }.recover {
+          case e:Throwable => {
+            e.printStackTrace()
+            BadRequest(views.html.login.main("Register",e.getMessage)(views.html.account.register(Some(email),Some(givenName),Some(lastName))))
+          }
+        }
+      }
+    )
   }
 
   def list = Action.async { implicit request =>

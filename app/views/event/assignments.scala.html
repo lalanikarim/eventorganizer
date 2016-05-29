@@ -43,7 +43,7 @@
                 }
                 <td>
                     @if(event.state == models.EventAttr.State.open){
-                        <a class="btn btn-primary btn-sm" href="@routes.Event.getassignments(event.id, ai.id,None,None)">@if(cmap.contains(ai.id)){
+                        <a class="btn btn-primary btn-sm" href="@routes.Event.getassignments(event.id, ai.id,None,None,None)">@if(cmap.contains(ai.id)){
                             Change
                             } else {
                             Assign

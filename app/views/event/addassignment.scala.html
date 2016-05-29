@@ -1,6 +1,6 @@
 @(event: models.Event, eventDays:String, eventAgendaItem: models.EventAgendaItem,
     agendaType: models.AgendaType, assignments: Seq[AssignmentContact], contacts: Seq[AssignmentContact],
-    search:Option[String],total:Int,page:Int)
+    search:Option[String],total:Int,page:Int,onlyPrefered: Option[Boolean])
 <div class="col-md-8 col-sm-12">
     <h4>Choose Assignment</h4>
     <dl class="dl-horizontal">
@@ -9,9 +9,14 @@
         <dt>Date</dt>
         <dd>@event.date (<strong>@eventDays</strong>)</dd>
         <dt>Assignment</dt>
-        <dd>@agendaType.name</dd>
+        <dd>
+            <a href="@routes.Event.getassignments(event.id, eventAgendaItem.id,Some(true),None,None)">@agendaType.name</a>
+            @if(onlyPrefered.getOrElse(false)){
+            <a href="@routes.Event.getassignments(event.id, eventAgendaItem.id,None,None,None)">(clear)</a>
+            }
+        </dd>
     </dl>
     @views.html.event.contacttable(event.id,eventAgendaItem.id,eventDays,assignments,true)
-    @views.html.event.contactpager(event.id,eventAgendaItem.id,search,page,total)
+    @views.html.event.contactpager(event.id,eventAgendaItem.id,onlyPrefered,search,page,total)
     @views.html.event.contacttable(event.id,eventAgendaItem.id,eventDays,contacts,false)
 </div>

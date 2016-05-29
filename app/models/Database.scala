@@ -62,7 +62,7 @@ case class Event(id: Int, eventTypeId: Int, date: java.sql.Date, locationId: Int
 case class AgendaType(id: Int, name: String, parent: Option[Int])
 case class AgendaItem(id: Int, eventTypeId: Int, agendaTypeId: Int)
 case class EventAgendaItem(id: Int, eventId: Int, agendaTypeId: Int, prenotes: String = "")
-case class EventAgendaItemContact(id: Int, eventId: Int, contactId: Int, postnotes: String = "")
+case class EventAgendaItemContact(id: Int, eventId: Int, contactId: Int, userId: Int, postnotes: String = "")
 
 class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvider) extends HasDatabaseConfigProvider[JdbcProfile] {
 
@@ -179,14 +179,16 @@ class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
       def id = column[Int]("id")
       def eventId = column[Int]("eventId")
       def contactId = column[Int]("contactId")
+      def userId = column[Int]("userId")
       def postnotes = column[String]("postnotes")
 
       def contacts = foreignKey("fk_eaiContacts", contactId, Contacts.contactsTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
+      def users = foreignKey("fk_eaiUsers", userId, Users.usersTable)(_.id, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
       def eventAgendaItems = foreignKey("fk_eventAgendaItems", (id, eventId),
         eventAgendaItemsTable)({e => (e.id,e.eventId)}, ForeignKeyAction.Cascade, ForeignKeyAction.Restrict)
       def pk = primaryKey("pk_eventAgendaItemContact", (id, eventId, contactId))
 
-      def * = (id, eventId, contactId, postnotes) <> (EventAgendaItemContact.tupled, EventAgendaItemContact.unapply)
+      def * = (id, eventId, contactId, userId, postnotes) <> (EventAgendaItemContact.tupled, EventAgendaItemContact.unapply)
     }
 
     val agendaTypesTable = TableQuery[AgendaTypesTable]

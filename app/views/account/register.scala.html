@@ -1,0 +1,29 @@
+@(email: Option[String], givenName: Option[String], lastName: Option[String])
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">Register Account</h3>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="@routes.Account.processregister">
+            <div class="form-group">
+                <label>Email</label>
+                <input class="form-control" name="email" type="email" value="@email" placeholder="Email">
+            </div>
+            <div class="form-group">
+                <label>Given Name</label>
+                <input class="form-control" name="givenName" value="@givenName" placeholder="Given Name">
+            </div>
+            <div class="form-group">
+                <label>Last Name</label>
+                <input class="form-control" name="lastName" value="@lastName" placeholder="Last Name">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input class="form-control" name="password" type="password" placeholder="Password">
+            </div>
+            <button class="btn btn-sm btn-primary" type="submit">Register</button>
+            <button class="btn btn-sm btn-default" type="reset">Reset</button>
+            <a class="btn btn-sm" href="@routes.Application.nosession">Login</a>
+        </form>
+    </div>
+</div>
