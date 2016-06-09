@@ -1,6 +1,6 @@
 @(contacts: Seq[(models.Contact,Boolean,Boolean)])
 <div class="row">
-    <h4>Contacts</h4>
+    <h4><div class="col-md-4 col-sm-12">Contacts <a href="#addcontact" class="btn btn-primary btn-sm pull-right">Add Contact</a></div></h4>
     <table class="table">
         <thead>
             <tr>
@@ -35,7 +35,6 @@
                 <th>
                     <div class="btn-group" role="group">
                         <a href="@routes.Contact.get(contact.id)" class="btn btn-primary btn-sm">View</a>
-                        <a href="@routes.Contact.remove(contact.id)" class="btn btn-danger btn-sm">Delete</a>
                     </div>
                 </th>
             </tr>

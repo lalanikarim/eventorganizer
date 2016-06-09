@@ -1,7 +1,8 @@
 @(eventType: models.EventType, agendaItems: List[(models.AgendaItem, models.AgendaType)])
+<h4>Event Type <a class="btn btn-danger btn-sm" href="@routes.EventType.remove(eventType.id)">Delete</a></h4>
 <div class="row">
     <div class="col-md-4 col-sm-8">
-        <h4>Event Type</h4>
+
         <form method="post" action="/eventtype/:id">
             <div class="form-group">
                 <label>Id:</label>

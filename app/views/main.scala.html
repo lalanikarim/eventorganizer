@@ -24,7 +24,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/">Events Organizer</a>
+                    <a class="navbar-brand" href="/"><span class="glyphicon glyphicon-home"></span></a>
                 </div>
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
@@ -34,12 +34,19 @@
                         <li><hr/></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
-                        @if(user.map(_.isAdmin).getOrElse(false)) {
-                        <li><a href="@routes.Account.list()">Accounts</a></li>
-                        }
-                        <li><a href="@routes.Location.index()">Locations</a></li>
-                        <li><a href="@routes.EventType.index()">Event Types</a></li>
-                        <li><a href="@routes.AgendaType.index()">Agenda Types</a></li>
+
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="glyphicon glyphicon-cog"></span> <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                @if(user.map(_.isAdmin).getOrElse(false)) {
+                                <li><a href="@routes.Account.list()">Accounts</a></li>
+                                }
+                                <li><a href="@routes.Location.index()">Locations</a></li>
+                                <li><a href="@routes.EventType.index()">Event Types</a></li>
+                                <li><a href="@routes.AgendaType.index()">Agenda Types</a></li>
+                            </ul>
+                        </li>
+
                         @user.map{_ =>
                         <li><a href="@routes.Application.logout()">Logout</a></li>
                         }

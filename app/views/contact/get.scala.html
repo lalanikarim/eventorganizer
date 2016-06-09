@@ -1,6 +1,6 @@
 @(contact: models.Contact)
 <div class="col-md-4 col-sm-8">
-    <h4>Edit Contact</h4>
+    <h4>Edit Contact <a href="@routes.Contact.remove(contact.id)" class="btn btn-danger btn-sm pull-right">Delete</a></h4>
     <form class="form" method="post" action="/contact/@contact.id">
         <div class="form-group">
             <label>Id</label><span>@contact.id</span>
