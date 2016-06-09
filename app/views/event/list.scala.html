@@ -1,6 +1,9 @@
-@(events: Seq[(models.Event,models.Location, Int)])
+@(events: Seq[(models.Event,models.Location, Int)],page:Int,total:Int)
 <div class="row">
     <h4>Events</h4>
+    <p></p>
+    @views.html.event.eventpager(page,total)
+
     <table class="table">
         <thead>
             <tr>
@@ -32,4 +35,5 @@
             }
         </tbody>
     </table>
+    @views.html.event.eventpager(page,total)
 </div>

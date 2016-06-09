@@ -1,0 +1,38 @@
+@(page:Int,total:Int)
+@if(total > 1){
+<div class="container">
+    <nav>
+        <ul class="pagination" style="margin:0">
+            <li>
+                <a href='@if(page > 1) {
+                @routes.Event.index(Some(page - 1))
+                } else {
+                #
+                }' aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            @for(p <- 1 to total) {
+            <li
+                    @if(page == p) {
+                    class="active"
+                    }
+            ><a href="@if(page != p) {
+                @routes.Event.index(Some(p))
+                } else {
+                #
+                }">@p</a></li>
+            }
+            <li>
+                <a href='@if(page < total) {
+                @routes.Event.index(Some(page + 1))
+                } else {
+                #
+                }' aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+}

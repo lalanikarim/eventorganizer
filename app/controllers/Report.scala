@@ -120,7 +120,7 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
         }
 
         val atids = ea.sortBy(_.id).map { ea => ea.id -> ea.agendaTypeId }.distinct
-        val events = e.sortBy(_.date.getTime)
+        val events = e.sortBy(_.date.getTime * -1)
 
         val header = et.headOption.map(_.name).getOrElse("-") +: events.map(_.date.toString)
         val result = header +: atids.map { case (eaid, atid) =>

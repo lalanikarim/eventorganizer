@@ -25,8 +25,10 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   import config.db
   import config.driver.api._
 
-  def index = Action.async { implicit request =>
+  def index(page: Option[Int]) = Action.async { implicit request =>
     implicit val loggedInUser = SessionUtils.getLoggedInUser
+
+    val MAXPERPAGE = 10
 
     val l = for {l <- locationsTable.sortBy(_.id)} yield l
     val et = for {et <- eventTypesTable.sortBy(_.id)} yield et
@@ -47,12 +49,17 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
     for {
       locations <- db.run(l.result)
       eventTypes <- db.run(et.result)
-      events <- db.run(eagg.sortBy(_._1.id).result)
+      events <- db.run(eagg.sortBy(_._1.date.desc).result)
 
     } yield {
+
+      val prePage = events.map(e => (e._1,e._2,e._3.getOrElse(0)))
+      val total = (prePage.length / MAXPERPAGE) + (if (prePage.length % MAXPERPAGE == 0) 0 else 1)
+      val result = prePage.drop((page.getOrElse(1) - 1) * MAXPERPAGE).take(MAXPERPAGE)
+
       Ok(views.html.index("Events")(
         views.html.aggregator(Seq(
-          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0)))),
+          views.html.event.list(result,page.getOrElse(1),total),
           views.html.event.add(eventTypes.toList, locations.toList)
         ))
       ))

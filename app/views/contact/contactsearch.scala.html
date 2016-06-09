@@ -1,0 +1,15 @@
+@(search:Option[String])
+<div class="container">
+    <p></p>
+    <div class="form-group">
+        <div class="input-group">
+            <input id="txtSearch" type="text" class="form-control" placeholder="Search for...">
+            <span class="input-group-btn">
+                <button class="btn btn-default" type="button" onclick="var search = $('#txtSearch').val();window.location='@routes.Contact.index(None,None)?search=' + search">Go!</button>
+            </span>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    document.getElementById('txtSearch').value = getParameterByName('search');
+</script>

@@ -1,10 +1,13 @@
-@(contacts: Seq[(models.Contact,Boolean,Boolean)])
+@(contacts: Seq[(models.Contact,Boolean,Boolean)],search:Option[String],page:Int,total:Int)
 <div class="row">
     <h4><div class="col-md-4 col-sm-12">Contacts <a href="#addcontact" class="btn btn-primary btn-sm pull-right">Add Contact</a></div></h4>
+</div>
+@views.html.contact.contactsearch(search)
+@views.html.contact.contactpager(search,page,total)
+<div class="row">
     <table class="table">
         <thead>
             <tr>
-                <th>Id</th>
                 <th>Name</th>
                 <th>Group Id</th>
                 <th>Preference?</th>
@@ -15,7 +18,6 @@
         <tbody>
         @for((contact, hasPrefs, hasHistory) <- contacts){
             <tr>
-                <td>@contact.id</td>
                 <td>@contact.givenName @contact.lastName</td>
                 <td>@contact.groupId</td>
                 <td>
@@ -42,3 +44,4 @@
         </tbody>
     </table>
 </div>
+@views.html.contact.contactpager(search,page,total)

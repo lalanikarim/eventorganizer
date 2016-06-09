@@ -47,7 +47,7 @@ POST    /agendaitem                 controllers.AgendaItem.submit
 POST    /agendaitem/:id             controllers.AgendaItem.edit(id: Int)
 GET     /agendaitem/:id/delete      controllers.AgendaItem.remove(id: Int)
 
-GET     /event                      controllers.Event.index
+GET     /event                      controllers.Event.index(page:Option[Int])
 GET     /event/:id                  controllers.Event.get(id: Int)
 POST    /event                      controllers.Event.submit
 POST    /event/:id                  controllers.Event.edit(id: Int)
@@ -63,7 +63,7 @@ GET     /event/:id/:agendaItemId/delete         controllers.Event.removeagenda(i
 GET     /event/:id/:oldItemId/:newItemId        controllers.Event.moveagenda(id: Int, oldItemId: Int, newItemId: Int)
 
 
-GET     /contact                    controllers.Contact.index
+GET     /contact                    controllers.Contact.index(search: Option[String], page: Option[Int])
 GET     /contact/:id                controllers.Contact.get(id: Int)
 POST    /contact                    controllers.Contact.submit
 POST    /contact/:id                controllers.Contact.edit(id: Int)

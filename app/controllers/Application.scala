@@ -130,7 +130,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
 
       Ok(views.html.index("Events")(
         views.html.splitview(
-          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0)))),views.html.aggregator(
+          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0))),1,1),views.html.aggregator(
             Seq(views.html.reports.horizontal("By Category",reportByCategory),
               views.html.reports.horizontal("By Gender",reportBySex),
               views.html.reports.vertical("By Group",reportByGroupId)

@@ -59,18 +59,18 @@
                 <td>@name</td>
                 <td>
                     @if(agendaItem.id > 1) {
-                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id-1)" class="glyphicon glyphicon-menu-up"></a>
+                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id-1)" class="btn btn-default"><span class="glyphicon glyphicon-menu-up"></span></a>
                     } else {
-                    <span class="glyphicon glyphicon-minus"></span>
+                    <a href="#" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></a>
                     }
                     @if(agendaItem.id < agendaItems.reverse.head._1.id) {
-                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id+1)" class="glyphicon glyphicon-menu-down"></a>
+                    <a href="@routes.Event.moveagenda(event.id,agendaItem.id,agendaItem.id+1)" class="btn btn-default"><span class="glyphicon glyphicon-menu-down"></span></a>
                     } else {
-                    <span class="glyphicon glyphicon-minus"></span>
+                    <a href="#" class="btn btn-default"><span class="glyphicon glyphicon-minus"></span></a>
                     }
                 </td>
                 <td>
-                    <a href="@routes.Event.removeagenda(event.id,agendaItem.id)" class="glyphicon glyphicon-trash"></a>
+                    <a href="@routes.Event.removeagenda(event.id,agendaItem.id)" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></a>
                 </td>
             </tr>
         }

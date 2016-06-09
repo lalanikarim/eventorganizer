@@ -26,10 +26,17 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
   import config.db
   import config.driver.api._
 
-  def index = Action.async { implicit request =>
+  def index(search: Option[String],page: Option[Int]) = Action.async { implicit request =>
+
+    val MAXPERPAGE = 20
+
     implicit val loggedInUser = SessionUtils.getLoggedInUser
     val cq = (for {
-      ((c,p),a) <- contactsTable joinLeft
+      ((c,p),a) <- search.map(s => contactsTable.filter{c =>
+        c.givenName.toLowerCase.indexOf(s.toLowerCase) > -1 ||
+        c.lastName.toLowerCase.indexOf(s.toLowerCase) > -1 ||
+        c.groupId.toLowerCase.indexOf(s.toLowerCase) > -1
+      }).getOrElse(contactsTable) joinLeft
         contactPreferencesTable on (_.id === _.contactId) joinLeft
         eventAgendaItemContactsTable on ((cp,e) => cp._1.id === e.contactId)
     } yield (c,p,a)) groupBy {
@@ -47,7 +54,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
         (pr,ar)
       }
       (cg, ragg.map(_._1).sum, ragg.map(_._2).sum)
-    } sortBy(_._1.id)
+    } sortBy(_._1.givenName)
 
     db.run(cagg.result).map { seq =>
       val result = seq.map { i =>
@@ -55,9 +62,12 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
         (c,p.getOrElse(0) > 0,a.getOrElse(0) > 0)
       }
 
+      val total = (result.length/MAXPERPAGE + (if (result.length % MAXPERPAGE > 0) 1 else 0)).toInt
+      val resultPaged = result.drop((page.getOrElse(1) - 1) * MAXPERPAGE ).take(MAXPERPAGE)
+
       Ok(views.html.index("Contacts")(
         views.html.aggregator(Seq(
-          views.html.contact.list(result),
+          views.html.contact.list(resultPaged,search,page.getOrElse(1),total),
           views.html.contact.add())
         )
       ))
