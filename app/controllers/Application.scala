@@ -144,22 +144,23 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
     Ok(views.html.login.login(""))
   }
 
+  private val now = new java.sql.Timestamp((new java.util.Date).getTime)
+
   def login = Action.async { implicit request =>
     val form = Form(
-      tuple(
-        "login" -> text,
-        "password" -> text
-      )
+    tuple(
+    "login" -> text,
+    "password" -> text
+    )
     )
 
     val invalidCredentials = "Invalid credentials."
     val maxFailedAttempts = "Account locked due to exceeding maximum failed attempts."
 
     form.bindFromRequest.fold(
-      hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
-      loginForm => {
+    hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
+    loginForm => {
         val (email,password) = loginForm
-
         val uq = for { u <- usersTable.filter(u => u.email === email && u.failedAttempts < 2 &&
           u.password === PasswordUtils.getHash(password)) } yield u
         val uuq = for { u <- usersTable.filter(_.email === email) } yield (u.active, u.lastLogin, u.lastAttempt, u.failedAttempts)
@@ -178,8 +179,8 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
                 db.run(
                   uuq.update(
                     user.map(_ => active).getOrElse(active && failedAttempts < 2),
-                    user.map(_ => new Date((new java.util.Date).getTime)).getOrElse(lastLogin),
-                    new Date((new java.util.Date).getTime),
+                    user.map(_ => now).getOrElse(lastLogin),
+                    now,
                     user.map(_ => 0).getOrElse(failedAttempts + 1)
                   )
                 ),5 seconds)
@@ -290,8 +291,6 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
         val givenName = confUser.getString("givenName")
         val lastName = confUser.getString("lastName")
         val reset = confUser.getString("reset")
-
-        val now = new Date((new java.util.Date).getTime)
 
         email.map(email => givenName.map(givenName => lastName.map{lastName =>
           List(models.User(0,email,givenName,lastName,None,0,now,now,true,reset,true))

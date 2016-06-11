@@ -42,7 +42,7 @@ class Account @Inject() (dao: DatabaseAO) {
       hasErrors => Future successful BadRequest,
       registerForm => {
         val (email,givenName,lastName,password) = registerForm
-        val now = new Date((new java.util.Date()).getTime)
+        val now = new java.sql.Timestamp((new java.util.Date()).getTime)
         db.run(Users.usersTable += User(0,email,givenName,lastName,Some(PasswordUtils.getHash(password)),0,now,now,false,None,false)).map {
           _ => Ok(views.html.login.main("Register","Thank you for registering. Your account will be activated shortly.",false)(views.html.account.register(None,None,None)))
         }.recover {

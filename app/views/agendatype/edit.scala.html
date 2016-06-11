@@ -1,7 +1,7 @@
 @(agendaType: models.AgendaType, agendaTypes: Seq[models.AgendaType])
 <div class="row">
     <div class="col-md-4 col-sm-8">
-        <h4>Edit Agenda Type <a class="btn btn-danger btn-sm pull-right" href="@routes.AgendaType.remove(agendaType.id)">Delete</a></h4>
+        <h4>Edit Agenda Type <a class="btn btn-danger btn-sm pull-right" href="#" onclick="confirmDelete('@routes.AgendaType.remove(agendaType.id)')">Delete</a></h4>
         <form method="post" action="/agendatype/@{agendaType.id}">
             <div class="form-group">
                 <label>Id:</label><span>@agendaType.id</span>

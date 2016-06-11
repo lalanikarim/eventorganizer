@@ -115,8 +115,9 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
 
         Ok(views.html.index("Contact")(
           views.html.aggregator(Seq(
+            views.html.row(views.html.aggregator(Seq(
             views.html.contact.get(contacts.head),
-            views.html.contact.history(history),
+            views.html.contact.history(history)))),
             views.html.contact.addpreference(contacts.head.id, prefYes, prefNo, agendaTypesTup)
           ))
         ))

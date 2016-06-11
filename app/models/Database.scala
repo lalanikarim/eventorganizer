@@ -14,11 +14,11 @@ import slick.profile.SqlProfile.ColumnOption.SqlType
   */
 
 case class LoggedInUser(id: Int, email: String, givenName: String, lastName: String,
-                        lastLogin: java.sql.Date, isAdmin: Boolean = false)
+                        lastLogin: java.util.Date, isAdmin: Boolean = false)
 
 case class User(id: Int, email: String, givenName: String, lastName: String,
-                password: Option[String], failedAttempts: Int, lastLogin: java.sql.Date,
-                lastAttempt: java.sql.Date, active: Boolean, resetKey: Option[String], isAdmin: Boolean = false) {
+                password: Option[String], failedAttempts: Int, lastLogin: java.sql.Timestamp,
+                lastAttempt: java.sql.Timestamp, active: Boolean, resetKey: Option[String], isAdmin: Boolean = false) {
   def noPassword = User(id, email, givenName, lastName, None, failedAttempts, lastLogin, lastAttempt, active, None, isAdmin)
   def toLoggedInUser = LoggedInUser(id,email,givenName,lastName,lastLogin,isAdmin)
 }
@@ -198,6 +198,7 @@ class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
   }
 
   object Users {
+
     class UsersTable(tag: Tag) extends Table[User](tag, "USERS") {
       def id = column[Int]("id", O.PrimaryKey, O.AutoInc)
       def email = column[String]("email", O.Length(50, varying = true))
@@ -205,8 +206,8 @@ class DatabaseAO @Inject() (protected val dbConfigProvider: DatabaseConfigProvid
       def lastName = column[String]("lastName", O.Length(25,varying = true))
       def password = column[Option[String]]("password", O.Length(64,varying = true))
       def failedAttempts = column[Int]("failedAttempts", O.Default(0))
-      def lastLogin = column[java.sql.Date]("lastLogin")
-      def lastAttempt = column[java.sql.Date]("lastAttempt")
+      def lastLogin = column[java.sql.Timestamp]("lastLogin")
+      def lastAttempt = column[java.sql.Timestamp]("lastAttempt")
       def active = column[Boolean]("active")
       def resetKey = column[Option[String]]("resetKey",O.Length(50,varying = true))
       def isAdmin = column[Boolean]("isAdmin",O.Default(false))

@@ -1,7 +1,7 @@
 @(agendaItem: models.AgendaItem, eventTypes: List[models.EventType], agendaTypes: List[models.AgendaType])
 <div class="row">
     <div class="col-md-4 col-sm-8">
-        <h4>Edit Agenda</h4>
+        <h4>Edit Agenda <a class="btn btn-danger btn-sm pull-right" href="@routes.AgendaItem.remove(agendaItem.id)">Delete</a></h4>
         <form class="form-horizontal" method="post" action="/agendaitem/@{agendaItem.id}">
             <div class="form-group">
                 <label class="col-md-4">Id:</label>

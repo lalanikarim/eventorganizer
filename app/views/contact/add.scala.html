@@ -1,56 +1,54 @@
-<div class="row">
-    <div class="col-md-4 col-sm-12">
-        <h4>Add Contact <a name="addcontact"></a></h4>
-        <form class="form" method="post" action="/contact">
+<div class="col-md-4 col-sm-12">
+    <h4>Add Contact <a name="addcontact"></a></h4>
+    <form class="form" method="post" action="/contact">
+        <div class="row">
+            <div class="col-sm-6">
+                <label>Given Name: </label>
+                <input class="form-control" name="givenName">
+            </div>
+            <div class="col-sm-6">
+                <label>Last Name: </label>
+                <input class="form-control" name="lastName">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Sex: </label>
             <div class="row">
-                <div class="col-sm-6">
-                    <label>Given Name: </label>
-                    <input class="form-control" name="givenName">
+                <div class="col-xs-4">
+                    <input type="radio" name="sex" value="m">
+                    <label>Male</label>
                 </div>
-                <div class="col-sm-6">
-                    <label>Last Name: </label>
-                    <input class="form-control" name="lastName">
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Sex: </label>
-                <div class="row">
-                    <div class="col-xs-4">
-                        <input type="radio" name="sex" value="m">
-                        <label>Male</label>
-                    </div>
-                    <div class="col-xs-4">
-                        <input type="radio" name="sex" value="f">
-                        <label>Female</label>
-                    </div>
+                <div class="col-xs-4">
+                    <input type="radio" name="sex" value="f">
+                    <label>Female</label>
                 </div>
             </div>
-            <div class="form-group">
-                <label>Category: </label>
-                <div class="row">
-                    <div class="col-xs-4">
-                        <input type="radio" name="category" value="r">
-                        <label>Student</label>
-                    </div>
-                    <div class="col-xs-4">
-                        <input type="radio" name="category" value="a">
-                        <label>Adult</label>
-                    </div>
-                    <div class="col-xs-4">
-                        <input type="radio" name="category" value="s">
-                        <label>Senior</label>
-                    </div>
+        </div>
+        <div class="form-group">
+            <label>Category: </label>
+            <div class="row">
+                <div class="col-xs-4">
+                    <input type="radio" name="category" value="r">
+                    <label>Student</label>
+                </div>
+                <div class="col-xs-4">
+                    <input type="radio" name="category" value="a">
+                    <label>Adult</label>
+                </div>
+                <div class="col-xs-4">
+                    <input type="radio" name="category" value="s">
+                    <label>Senior</label>
                 </div>
             </div>
-            <div class="form-group">
-                <label>Group Id: </label>
-                <input class="form-control" name="groupId">
-            </div>
-            <div class="form-group">
-                <label>Notes: </label>
-                <textarea class="form-control" name="notes"></textarea>
-            </div>
-            <button class="btn btn-default" type="submit">Submit</button>
-        </form>
-    </div>
+        </div>
+        <div class="form-group">
+            <label>Group Id: </label>
+            <input class="form-control" name="groupId">
+        </div>
+        <div class="form-group">
+            <label>Notes: </label>
+            <textarea class="form-control" name="notes"></textarea>
+        </div>
+        <button class="btn btn-default" type="submit">Submit</button>
+    </form>
 </div>

@@ -40,7 +40,7 @@
         </td>
         <td>
             @if(assigned) {
-            <a class="btn btn-primary btn-sm" href="@routes.Event.unassign(eventId,eventAgendaItemId,ac.contact.id)">Remove</a>
+            <a class="btn btn-primary btn-sm" href="#" onclick="confirmDelete('@routes.Event.unassign(eventId,eventAgendaItemId,ac.contact.id)')">Remove</a>
             } else {
             <a class="btn btn-primary btn-sm" href="@routes.Event.assign(eventId,eventAgendaItemId,ac.contact.id)">Assign</a>
             }
