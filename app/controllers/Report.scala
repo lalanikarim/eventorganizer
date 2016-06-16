@@ -40,8 +40,8 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     val form = Form(
       tuple(
         "eventTypeId" -> number,
-        "from" -> date,
-        "to" -> date
+        "from" -> date("MM-dd-yyyy"),
+        "to" -> date("MM-dd-yyyy")
       )
     )
 
