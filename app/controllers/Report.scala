@@ -40,39 +40,43 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     val form = Form(
       tuple(
         "eventTypeId" -> number,
-        "year" -> number
+        "from" -> date,
+        "to" -> date
       )
     )
 
     form.bindFromRequest.fold(
       hasErrors => Future successful BadRequest(hasErrors.errors.map(_.message).mkString(", ")),
       form => {
-        val (eventTypeId, year) = form
-        getSummaryReportImpl(eventTypeId, year, page).map{r =>
+        val (eventTypeId, f,t) = form
+        val from = new Date(f.getTime)
+        val to = new Date(t.getTime)
+        getSummaryReportImpl(eventTypeId, from, to, page).map{r =>
           val (result,total) = r
-          Ok(views.html.index("Summary Report")(views.html.reports.summary(result,year,eventTypeId,page.getOrElse(1),total)))
+          Ok(views.html.index("Summary Report")(views.html.reports.summary(result,from,to,eventTypeId,page.getOrElse(1),total)))
         }
       }
     )
   }
 
-  def getSummaryReportGet(eventTypeId: Int, year: Int, page: Option[Int]) = Action.async { implicit request =>
+  def getSummaryReportGet(eventTypeId: Int, fromInt: Long, toInt: Long, page: Option[Int]) = Action.async { implicit request =>
     implicit val loggedInUser = SessionUtils.getLoggedInUser
-    getSummaryReportImpl(eventTypeId, year, page).map{r =>
+    val (from, to) = (new Date(fromInt),new Date(toInt))
+    getSummaryReportImpl(eventTypeId, from, to, page).map{r =>
       val (result,total) = r
-      Ok(views.html.index("Summary Report")(views.html.reports.summary(result,year,eventTypeId,page.getOrElse(1),total)))
+      Ok(views.html.index("Summary Report")(views.html.reports.summary(result,from,to,eventTypeId,page.getOrElse(1),total)))
     }
   }
 
-  def getSummaryReportImpl(eventTypeId: Int, year: Int, page: Option[Int]) = {
+  def getSummaryReportImpl(eventTypeId: Int, from: Date, to: Date, page: Option[Int]) = {
 
     val MAXPERPAGE = 5
 
-    val calendar = java.util.Calendar.getInstance()
-    calendar.set(year, 0, 1, 0, 0)
-    val firstDate = new Date(calendar.getTime.getTime)
-    calendar.set(year + 1, 0, 1, 0, 0)
-    val lastDate = new Date(calendar.getTime.getTime)
+    //val calendar = java.util.Calendar.getInstance()
+    //calendar.set(year, 0, 1, 0, 0)
+    val firstDate = from //new Date(calendar.getTime.getTime)
+    //calendar.set(year + 1, 0, 1, 0, 0)
+    val lastDate = to //new Date(calendar.getTime.getTime)
 
     val etq = eventTypesTable.filter(_.id === eventTypeId)
 

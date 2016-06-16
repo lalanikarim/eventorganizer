@@ -101,7 +101,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   def submit = Action.async { implicit request =>
     val form = Form(
       tuple(
-        "date" -> date("yyyy-MM-dd"),
+        "date" -> date("MM-dd-yyyy"),
         "eventTypeId" -> number,
         "locationId" -> number
       )
@@ -145,7 +145,7 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
     val form = Form(
       tuple(
         "name" -> text,
-        "date" -> date("yyyy-MM-dd"),
+        "date" -> date("MM-dd-yyyy"),
         "eventTypeId" -> number,
         "locationId" -> number
       )
@@ -174,15 +174,40 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def remove (id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
     val eq = for { e <- eventsTable.filter(_.id === id) } yield e
-    db.run(eq.delete).map { _ =>
-      Redirect("/event")
-    } recover {
-      case e:Throwable => {
-        e.printStackTrace()
-        BadRequest
+    val eaq = (for { ea <- eventAgendaItemsTable.filter(_.eventId === id) } yield ea).countDistinct
+    val aq = (for { a <- eventAgendaItemContactsTable.filter(_.eventId === id)} yield a).countDistinct
+
+    val q = for {
+      ea <- db.run(eaq.result)
+      a <- db.run(aq.result)
+    } yield {
+      (ea, a)
+    }
+
+    q.flatMap { qr:(Int,Int) =>
+      val (ea, a) = qr
+      var agenda:List[String] = if (ea > 0) {s"$ea Agenda Items" :: Nil} else Nil
+      val eaa:List[String] = if (a > 0) {s"$a Assignments" :: agenda} else agenda
+
+      eaa match {
+        case Nil => db.run(eq.delete).map { _ =>
+          Redirect("/event")
+        } recover {
+          case e:Throwable => {
+            e.printStackTrace()
+            BadRequest
+          }
+        }
+        case _ => Future successful BadRequest(views.html.index("Events")(views.html.message("Cannot delete event",
+          s"Event has ${eaa.mkString(" and ")}. Remove those from event first."))
+        )
       }
     }
+
+
   }
 
   def addagenda (id: Int) = Action.async { implicit request =>
@@ -210,23 +235,38 @@ class Event @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def removeagenda (id: Int, agendaItemId: Int) = Action.async { implicit request =>
+
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+    val eacq = (for {
+      eac <- eventAgendaItemContactsTable.filter(eac => eac.eventId === id && eac.id === agendaItemId)
+    } yield eac).countDistinct
+
     val q = for { eai <- eventAgendaItemsTable.filter(ea => ea.eventId === id && ea.id >= agendaItemId).sortBy(_.id)} yield eai
 
-    (for {
-      //del <- db.run(q1.delete)
-      update <- for (r <- db.stream(q.mutate.transactionally)) {
-        if (r.row.id == agendaItemId)
-          r.delete
-        else
-          r.row = r.row.copy(id = r.row.id - 1)
-      }
-    } yield {
-      Redirect("/event/" + id)
-    }) recover {
-      case e:Throwable => {
-        e.printStackTrace()
-        BadRequest
-      }
+    db.run(eacq.result).flatMap { eac =>
+      if (eac > 0) {
+        Future successful BadRequest(
+          views.html.index("Event Agenda")(
+            views.html.message("Cannot delete agenda item",s"Agenda item has $eac contacts assigned. Remove those from agenda item first.")
+          )
+        )
+      } else
+        (for {
+        //del <- db.run(q1.delete)
+          update <- for (r <- db.stream(q.mutate.transactionally)) {
+            if (r.row.id == agendaItemId)
+              r.delete
+            else
+              r.row = r.row.copy(id = r.row.id - 1)
+          }
+        } yield {
+          Redirect("/event/" + id)
+        }) recover {
+          case e: Throwable => {
+            e.printStackTrace()
+            BadRequest
+          }
+        }
     }
   }
 

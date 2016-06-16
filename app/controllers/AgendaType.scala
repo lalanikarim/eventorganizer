@@ -6,7 +6,6 @@ import models.{DatabaseAO, SessionUtils}
 import play.api.data.Forms._
 import play.api.data._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
-import slick.driver.JdbcProfile
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.Future
@@ -18,6 +17,7 @@ import scala.concurrent.Future
 class AgendaType @Inject() (dao: DatabaseAO) extends Controller {
   import dao._
   import Agenda._
+  import Contacts._
   import config.db
   import config.driver.api._
   def index = Action.async { implicit request =>
@@ -112,14 +112,44 @@ class AgendaType @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def remove (id: Int) = Action.async { implicit request =>
-    db.run(agendaTypesTable.filter(_.id === id).delete).map {
-      r =>
-        Redirect("/agendatype")
-    } recover {
-      case e: Throwable => {
-        e.printStackTrace()
-        BadRequest
-      }
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
+    val atq = (for {a <- agendaTypesTable.filter(_.parent === id)} yield a).countDistinct
+    val aiq = (for {ai <- agendaItemsTable.filter(_.agendaTypeId === id)} yield ai).countDistinct
+    val eaiq = (for {eai <- eventAgendaItemsTable.filter(_.agendaTypeId === id)} yield eai).countDistinct
+    val cpq = (for {cp <- contactPreferencesTable.filter(_.agendaTypeId === id)} yield cp).countDistinct
+
+    val q = for {
+      at <- db.run(atq.result)
+      ai <- db.run(aiq.result)
+      eai <- db.run(eaiq.result)
+      cp <- db.run(cpq.result)
+    } yield (at,ai, eai, cp)
+
+    q flatMap { qr =>
+      val (at, ai, eai, cp) = qr
+      val atm = if (at > 0) s"$at Child Types" :: Nil else Nil
+      val atim = if (ai > 0) s"$ai Event Types" :: atm else atm
+      val eatim = if (eai > 0) s"$eai Events" :: atim else atim
+      val items = if (cp > 0) s"$cp Preferences" :: eatim else eatim
+
+      if (at + ai + eai + cp > 0)
+        Future successful BadRequest(
+          views.html.index("Agenda Item")(
+            views.html.message("Cannot delete agenda type",
+              s"There are ${items.mkString(", ")} associated with this agenda type. Remove them first.")
+          )
+        )
+      else
+        db.run(agendaTypesTable.filter(_.id === id).delete).map {
+          r =>
+            Redirect("/agendatype")
+        } recover {
+          case e: Throwable => {
+            e.printStackTrace()
+            BadRequest
+          }
+        }
     }
   }
 }

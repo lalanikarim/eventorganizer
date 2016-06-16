@@ -30,6 +30,7 @@
                 <th>Id</th>
                 <th>Name</th>
                 <th></th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -37,21 +38,22 @@
             <tr>
                 <td>@a.id</td>
                 <td>@at.name</td>
-                <th>
+                <td>
                     @if(a.id > 1) {
-                    <a class="glyphicon glyphicon-menu-up" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id -1)"></a>
+                    <a class="btn btn-sm btn-default" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id -1)"><span class="glyphicon glyphicon-menu-up"></span></a>
                     } else {
-                    <span class="glyphicon glyphicon-minus"></span>
+                    <a class="btn btn-sm btn-default" href="#"><span class="glyphicon glyphicon-minus"></span></a>
                     }
 
                     @if(a.id < agendaItems.reverse.head._1.id) {
-                    <a class="glyphicon glyphicon-menu-down" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id+ 1)"></a>
+                    <a class="btn btn-sm btn-default" href="@routes.EventType.moveagendaitem(eventType.id,a.id,a.id+ 1)"><span class="glyphicon glyphicon-menu-down"></span></a>
                     } else {
-                    <span class="glyphicon glyphicon-minus"></span>
+                    <a class="btn btn-sm btn-default" href="#"><span class="glyphicon glyphicon-minus"></span></a>
                     }
-
-                    <a class="glyphicon glyphicon-trash" href="@routes.EventType.removeagendaitem(eventType.id,a.id)"></a>
-                </th>
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-danger" href="#" onclick="confirmDelete('@routes.EventType.removeagendaitem(eventType.id,a.id)')"><span class="glyphicon glyphicon-trash"></span></a>
+                </td>
             </tr>
             }
             </tbody>

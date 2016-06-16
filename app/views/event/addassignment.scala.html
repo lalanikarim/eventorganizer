@@ -7,7 +7,10 @@
         <dt>Event</dt>
         <dd><a href="@routes.Event.assignments(event.id)"><strong>@event.name</strong></a></dd>
         <dt>Date</dt>
-        <dd>@event.date (<strong>@eventDays</strong>)</dd>
+        <dd>@{
+            val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
+            sdf format event.date
+        } (<strong>@eventDays</strong>)</dd>
         <dt>Assignment</dt>
         <dd>
             <a href="@routes.Event.getassignments(event.id, eventAgendaItem.id,Some(true),None,None)">@agendaType.name</a>

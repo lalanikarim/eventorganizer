@@ -1,7 +1,7 @@
 @(event: models.Event, agendaItems: Seq[(models.EventAgendaItem,String)], eventTypes: Seq[models.EventType], locations: Seq[models.Location])
 <div class="row">
     <div class="col-md-4 col-sm-8">
-        <h4>Edit Event <a class="btn btn-primary btn-sm pull-right" href="#" onclick="confirmDelete('@routes.Event.assignments(event.id)')">Assignments</a> </h4>
+        <h4>Edit Event <a class="btn btn-danger btn-sm" href="#" onclick="confirmDelete('@routes.Event.remove(event.id)')"><span class="glyphicon glyphicon-trash"></span></a> <a class="btn btn-primary btn-sm pull-right" href="@routes.Event.assignments(event.id)">Assignments</a></h4>
         <form method="post" action="/event/@{event.id}">
             <div class="form-group">
                 <label>Id:</label><span>@event.id</span>
@@ -10,7 +10,8 @@
                 <label>Name:</label><input class="form-control" name="name" value="@event.name">
             </div>
             <div class="form-group">
-                <label>Date:</label><input class="form-control form-datetime" readonly name="date" value="@event.date">
+                <label>Date:</label><input class="form-control form-datetime" readonly name="date" value='@{val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
+                sdf format event.date}'>
             </div>
             <div class="form-group">
                 <label>Event Type:</label>

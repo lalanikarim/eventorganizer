@@ -244,7 +244,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
   }
 
   def recenthistory (id: Int) = {
-    val chq = for {
+    val chq = (for {
       ((((eai,at),e),eac),c) <- eventAgendaItemsTable join agendaTypesTable on
         (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
           val (ea,at) = eai
@@ -261,9 +261,9 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
         } take 20
     } yield {
       (e.date,e.name,at.name,eac.postnotes)
-    }
+    })
 
-    db.run(chq.result)
+    db.run(chq.sortBy(_._1.desc).result)
   }
 
   def historyforeventtype (id: Int, eventTypeId: Int) = Action.async { implicit request =>

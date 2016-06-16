@@ -14,7 +14,10 @@
             <tbody>
             @for((date,eventType,agendaType,notes) <- history){
             <tr>
-                <td>@date</td>
+                <td>@{
+                    val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
+                    sdf format date
+                    }</td>
                 <td>@eventType</td>
                 <td>@agendaType</td>
                 <td>@notes</td>

@@ -1,7 +1,7 @@
-@(report: Seq[Seq[String]],year: Int, eventTypeId: Int, page: Int, total: Int)
+@(report: Seq[Seq[String]],from: java.sql.Date, to: java.sql.Date, eventTypeId: Int, page: Int, total: Int)
 <div class="row">
     <h2>Summary Report</h2>
-    @views.html.reports.pager(routes.Report.getSummaryReportGet(eventTypeId,year,None).url,total,page)
+    @views.html.reports.pager(routes.Report.getSummaryReportGet(eventTypeId,from.getTime,to.getTime,None).url,total,page)
     <table class="table table-condensed">
         <thead>
         <tr>

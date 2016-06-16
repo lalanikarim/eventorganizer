@@ -48,7 +48,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
       val (el, agg) = i
       val (e, l) = el
       (e,l,agg.map(_._3.map(_ => 1).getOrElse(0)).sum)
-    }.sortBy{_._1.date.desc}.take(20).sortBy(_._1.date)
+    }.sortBy{_._1.date.desc}.take(20)
 
     val contactData = for {
       ((e,ea),c) <- eventsTable join eventAgendaItemContactsTable on (_.id === _.eventId) join contactsTable on (_._2.contactId === _.id)

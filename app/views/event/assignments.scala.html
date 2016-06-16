@@ -6,9 +6,12 @@
     <div>
         <dl class="dl-horizontal">
             <dt>Event</dt>
-            <dd><a href="@routes.Event.get(event.id)">@event.name</a></dd>
+            <dd><a href="@routes.Event.get(event.id)"><strong>@event.name</strong></a></dd>
             <dt>Date</dt>
-            <dd>@event.date</dd>
+            <dd>@{
+                val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
+                sdf format event.date
+                }</dd>
             <dt>Event Type</dt>
             <dd>@eventType.name</dd>
         </dl>

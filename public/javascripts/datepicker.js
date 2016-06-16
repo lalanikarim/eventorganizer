@@ -1,1 +1,1 @@
-$(".form-datetime").datepicker({format: 'yyyy-mm-dd'});
+$(".form-datetime").datepicker({format: 'mm-dd-yyyy'});
