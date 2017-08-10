@@ -1,0 +1,23 @@
+@(agendaType: String,report: Seq[(String,String,String,String)],from: java.sql.Date, to: java.sql.Date, agendaTypeId: Int, page: Int, total: Int)
+<div class="row">
+    <h2>Agenda Type Report: @agendaType</h2>
+    @views.html.reports.pager(routes.Report.getAgendaTypeReportGet(agendaTypeId,from.getTime,to.getTime,None).url,total,page)
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Event</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody>
+        @for(row <- report){
+        <tr>
+            <td>@{row._2}</td>
+            <td>@{row._1}</td>
+            <td>@{row._3} @{row._4}</td>
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>

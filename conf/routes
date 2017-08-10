@@ -71,8 +71,11 @@ GET     /contact/:id/delete         controllers.Contact.remove(id: Int)
 POST    /contact/:id/addpreference  controllers.Contact.addpreference(id: Int)
 
 GET     /report                     controllers.Report.index
-POST    /report                     controllers.Report.getSummaryReport(page: Option[Int])
+POST    /report/summary             controllers.Report.getSummaryReport(page: Option[Int])
 GET     /report/summary/:from/:to/:eventTypeId             controllers.Report.getSummaryReportGet(eventTypeId: Int, from: Long,to: Long, page: Option[Int])
+POST    /report/agendatype          controllers.Report.getAgendaTypeReport(page: Option[Int])
+GET     /report/agendatype/:from/:to/:agendaTypeId          controllers.Report.getAgendaTypeReportGet(agendaTypeId: Int, from: Long,to: Long, page: Option[Int])
+
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
