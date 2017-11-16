@@ -38,7 +38,7 @@
                 <td>@ai.prenotes</td>
                 <td>
                     @for(contact <- cmap.get(ai.id).getOrElse(Nil)){
-                        <div><a href="@routes.Contact.get(contact.id)">@{contact.givenName + " " + contact.lastName}</a></div>
+                        <div><a href="@routes.Contact.get(contact.id,None)">@{contact.givenName + " " + contact.lastName}</a></div>
                     }
                 </td>
                 @if(event.state == models.EventAttr.State.closed){

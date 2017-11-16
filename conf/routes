@@ -19,6 +19,7 @@ GET     /account/list               controllers.Account.list
 GET     /account/:id                controllers.Account.get(id: String)
 POST    /account/:id                controllers.Account.update(id: String)
 GET     /account/:id/active/:active controllers.Account.setactive(id: String, active: Boolean)
+POST    /account/:id/reset          controllers.Account.setresetkey(id: Int)
 
 GET     /location                   controllers.Location.index
 GET     /location/:id               controllers.Location.get(id: Int)
@@ -64,7 +65,7 @@ GET     /event/:id/:oldItemId/:newItemId        controllers.Event.moveagenda(id:
 
 
 GET     /contact                    controllers.Contact.index(search: Option[String], page: Option[Int])
-GET     /contact/:id                controllers.Contact.get(id: Int)
+GET     /contact/:id                controllers.Contact.get(id: Int, page: Option[Int])
 POST    /contact                    controllers.Contact.submit
 POST    /contact/:id                controllers.Contact.edit(id: Int)
 GET     /contact/:id/delete         controllers.Contact.remove(id: Int)

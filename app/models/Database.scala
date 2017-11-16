@@ -19,7 +19,7 @@ case class LoggedInUser(id: Int, email: String, givenName: String, lastName: Str
 case class User(id: Int, email: String, givenName: String, lastName: String,
                 password: Option[String], failedAttempts: Int, lastLogin: java.sql.Timestamp,
                 lastAttempt: java.sql.Timestamp, active: Boolean, resetKey: Option[String], isAdmin: Boolean = false) {
-  def noPassword = User(id, email, givenName, lastName, None, failedAttempts, lastLogin, lastAttempt, active, None, isAdmin)
+  def noPassword = User(id, email, givenName, lastName, None, failedAttempts, lastLogin, lastAttempt, active, resetKey, isAdmin)
   def toLoggedInUser = LoggedInUser(id,email,givenName,lastName,lastLogin,isAdmin)
 }
 

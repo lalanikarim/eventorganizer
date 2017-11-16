@@ -82,8 +82,29 @@ class Account @Inject() (dao: DatabaseAO) {
     Future successful Ok
   }
 
+  def setresetkey(id: Int) = Action.async { implicit request =>
+    implicit val loggedInUser = SessionUtils.getLoggedInUser
+
+    val redirect = Redirect(routes.Account.list())
+    if (!SessionUtils.isAdmin) Future successful Forbidden
+
+    val form = Form(
+      mapping(
+        "resetkey" -> text
+      )(a => a)(a => Some(a))
+    )
+    form.bindFromRequest.fold(
+      hasErrors => Future successful BadRequest,
+      resetKey => {
+        val uq = for { u <- usersTable.filter(u => u.id === id)} yield u.resetKey
+        db.run(uq.update( if(resetKey.trim.length > 0) Some(resetKey) else None )).map(_ => redirect)
+      }
+    )
+  }
+
   def setactive(email: String, active: Boolean) = Action { implicit request =>
     val loggedInUser = SessionUtils.getLoggedInUser
+    if (!SessionUtils.isAdmin) Forbidden
     val uq = for { u <- usersTable.filter(u => u.email === email && u.active =!= active)} yield u.active
     loggedInUser.map {
       user =>

@@ -8,6 +8,7 @@
             <th>Last Login</th>
             <th>Last Attempt</th>
             <th>Failed Attempts</th>
+            <th>Reset Key</th>
             <th></th>
         </tr>
         </thead>
@@ -25,6 +26,14 @@
                 sdf format u.lastAttempt
                 }</td>
             <td>@u.failedAttempts</td>
+            <td>
+                @if(userId != u.email) {
+                <form action="@{routes.Account.setresetkey(u.id)}" method="post">
+                    <input type="text" name="resetkey" value="@u.resetKey">
+                    <button class="btn btn-primary" type="submit">Save</button>
+                </form>
+                }
+            </td>
             <td>
                 @if(userId != u.email) {
                 <a href="@routes.Account.setactive(u.email,!u.active)">

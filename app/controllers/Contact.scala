@@ -74,7 +74,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
     }
   }
 
-  def get (id: Int) = Action.async { implicit request =>
+  def get (id: Int, page: Option[Int]) = Action.async { implicit request =>
     implicit val loggedInUser = SessionUtils.getLoggedInUser
 
     val cq = for { c <- contactsTable.filter(_.id === id) } yield c
@@ -92,7 +92,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
       prefYes <- db.run(cpyq.result)
       prefNo <- db.run(cpnq.result)
       agendaTypes <- db.run(agendaTypesTable.sortBy(_.id).result)
-      history <- recenthistory(id)
+      history <- recenthistory(id,page)
     } yield {
       if (contacts.length > 0) {
         val (parents, children) = ((Seq[models.AgendaType](),Seq[models.AgendaType]()) /: agendaTypes){(pc,at) =>
@@ -113,11 +113,12 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
           }
         }
 
+        val (items,total) = history
         Ok(views.html.index("Contact")(
           views.html.aggregator(Seq(
             views.html.row(views.html.aggregator(Seq(
             views.html.contact.get(contacts.head),
-            views.html.contact.history(history)))),
+            views.html.contact.history(id,items,page.getOrElse(1),total)))),
             views.html.contact.addpreference(contacts.head.id, prefYes, prefNo, agendaTypesTup)
           ))
         ))
@@ -232,7 +233,7 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
           }
         }
         db.run(oldq.delete.andThen((contactPreferencesTable ++= inserts))).map {
-          _ => Redirect(routes.Contact.get(id))
+          _ => Redirect(routes.Contact.get(id,None))
         } recover {
           case e:Throwable => {
             e.printStackTrace()
@@ -243,8 +244,10 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
     )
   }
 
-  def recenthistory (id: Int) = {
-    val chq = (for {
+  def recenthistory (id: Int,page: Option[Int]) = {
+    val p = page.getOrElse(1) - 1
+    val pageSize = 20
+    val chq = for {
       ((((eai,at),e),eac),c) <- eventAgendaItemsTable join agendaTypesTable on
         (_.agendaTypeId === _.id) join eventsTable on { (eai,e) =>
           val (ea,at) = eai
@@ -258,12 +261,20 @@ class Contact @Inject() (dao: DatabaseAO) extends Controller {
         } sortBy { r =>
           val ((((ea,at),e),eac),c) = r
           (e.date.desc,e.name,at.name)
-        } take 20
+        } drop(p * pageSize) take pageSize
     } yield {
       (e.date,e.name,at.name,eac.postnotes)
-    })
+    }
 
-    db.run(chq.sortBy(_._1.desc).result)
+    val t = for {
+      e <- eventAgendaItemContactsTable.filter(_.contactId === id)
+    } yield e
+
+    for {
+      history <- db.run(chq.sortBy(_._1.desc).result)
+      total <- db.run(t.result)
+    } yield (history, (total.length/ pageSize + (if (total.length % pageSize == 0) 0 else 1)).toInt)
+
   }
 
   def historyforeventtype (id: Int, eventTypeId: Int) = Action.async { implicit request =>

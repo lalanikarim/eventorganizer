@@ -14,4 +14,10 @@ object SessionUtils {
       case None => None
     }
   }
+
+
+  def isAdmin(implicit request: RequestHeader): Boolean = {
+    implicit val loggedInUser = getLoggedInUser
+    loggedInUser.map(_.isAdmin).getOrElse(false)
+  }
 }

@@ -14,7 +14,7 @@
 
     @for(ac <- contacts){
     <tr>
-        <td><a href="@routes.Contact.get(ac.contact.id)">@ac.contact.givenName @ac.contact.lastName</a></td>
+        <td><a href="@routes.Contact.get(ac.contact.id,None)">@ac.contact.givenName @ac.contact.lastName</a></td>
         <td>
             @if(ac.optPref.isDefined){
             @if(ac.optPref.get){
