@@ -1,15 +1,35 @@
-@(events: Seq[(models.Event,models.Location, Int)],page:Int,total:Int)
+@(events: Seq[(models.Event,models.Location, Int)],locations:Seq[models.Location], page:Int,total:Int,location:Option[Int])(implicit request: play.api.mvc.Request[Any])
 <div class="row">
     <h4>Events</h4>
     <p></p>
-    @views.html.event.eventpager(page,total)
+    @if(total > 1) {
+        @views.html.reports.pager(routes.Event.index(None,location).url,total,page)
+    }
 
     <table class="table">
         <thead>
             <tr>
                 <th>Date</th>
                 <th>Name</th>
-                <th>Location</th>
+                <th>
+
+                    <form action="@request.path" id="frmLocation" class="form" method="get">
+                        Location <select name="location" onchange="if(this.value > 0){ $('#frmLocation').submit();} else { window.location = '@request.path'}">
+                            <option
+                                @if(location.isEmpty){
+                                    selected
+                                }
+                            >All</option>
+                            @for(loc <- locations){
+                                <option value="@loc.id"
+                                    @if(location.getOrElse(0) == loc.id){
+                                        selected
+                                    }
+                                >@loc.name</option>
+                            }
+                        </select>
+                    </form>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -35,5 +55,8 @@
             }
         </tbody>
     </table>
-    @views.html.event.eventpager(page,total)
+
+    @if(total > 1) {
+        @views.html.reports.pager(routes.Event.index(None, location).url, total, page)
+    }
 </div>

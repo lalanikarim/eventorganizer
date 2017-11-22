@@ -16,7 +16,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class CheckSession @Inject() (implicit val mat: Materializer, ec: ExecutionContext) extends Filter {
 
   private val redirectToLogin = Redirect(routes.Application.login()).withNewSession
-  private val redirectToHome = Redirect(routes.Application.index())
+  private val redirectToHome = Redirect(routes.Application.index(None))
 
   def apply(nextFilter: RequestHeader => Future[Result])(requestHeader: RequestHeader): Future[Result] = {
     val loggedInUser = SessionUtils.getLoggedInUser(requestHeader)

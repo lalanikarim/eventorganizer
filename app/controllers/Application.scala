@@ -32,12 +32,13 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
 
   val db = config.db
 
-  def index = Action.async { implicit request =>
+  def index(location:Option[Int]) = Action.async { implicit request =>
 
     implicit val loggedInUser = SessionUtils.getLoggedInUser
 
+    val l = for {l <- locationsTable.sortBy(_.id)} yield l
     val e = (for {
-      ((e,l),a) <- (eventsTable join locationsTable on (_.locationId === _.id)) joinLeft
+      ((e,l),a) <- (eventsTable join location.map(l => locationsTable.filter(_.id === l)).getOrElse(locationsTable) on (_.locationId === _.id)) joinLeft
         eventAgendaItemsTable on (_._1.id === _.eventId)
     } yield (e,l,a)).sortBy(_._1.id).groupBy{r =>
       val (e, l, a) = r
@@ -99,6 +100,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
     }
 
     for {
+      locations <- db.run(l.result)
       events <- db.run(eagg.result)
       byCategory <- db.run(byCategoryAgg.result)
       bySex <- db.run(bySexAgg.result)
@@ -130,7 +132,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
 
       Ok(views.html.index("Events")(
         views.html.splitview(
-          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0))),1,1),views.html.aggregator(
+          views.html.event.list(events.map(e => (e._1,e._2,e._3.getOrElse(0))),locations,1,1,location),views.html.aggregator(
             Seq(views.html.reports.horizontal("By Category",reportByCategory),
               views.html.reports.horizontal("By Gender",reportBySex),
               views.html.reports.vertical("By Group",reportByGroupId)
@@ -190,7 +192,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
             user.map{user =>
               if (user.active) {
                 val loggedInUser = user.toLoggedInUser
-                Redirect(routes.Application.index()).withSession("user" -> Json.stringify(Json.toJson(loggedInUser)))
+                Redirect(routes.Application.index(None)).withSession("user" -> Json.stringify(Json.toJson(loggedInUser)))
               } else Ok(views.html.login.login(maxFailedAttempts))
             }.getOrElse(Ok(views.html.login.login(invalidCredentials)))
           }
@@ -254,7 +256,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
 
   def logout = Action { implicit request =>
     request.session - "user"
-    Redirect(routes.Application.index()).withNewSession
+    Redirect(routes.Application.index(None)).withNewSession
   }
 
   def scripts = Action { implicit request =>

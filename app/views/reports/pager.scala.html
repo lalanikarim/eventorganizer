@@ -4,7 +4,7 @@
         <ul class="pagination" style="margin:0">
             <li>
                 <a href='@if(page > 1) {
-                @{s"$link?page=${page-1}"}
+                @{s"$link${if(link.contains("?"))"&" else "?"}page=${page-1}"}
                 } else {
                 #
                 }' aria-label="Previous">
@@ -17,14 +17,14 @@
                     class="active"
                     }
             ><a href="@if(page != p) {
-                @{s"$link?page=$p"}
+                @{s"$link${if(link.contains("?"))"&" else "?"}page=$p"}
                 } else {
                 #
                 }">@p</a></li>
             }
             <li>
                 <a href='@if(page < total) {
-                @{s"$link?page=${page+1}"}
+                    @{s"$link${if(link.contains("?"))"&" else "?"}page=${page+1}"}
                 } else {
                 #
                 }' aria-label="Next">
