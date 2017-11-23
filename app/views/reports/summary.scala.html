@@ -5,8 +5,9 @@
     <table class="table table-condensed">
         <thead>
         <tr>
-            @for(header <- report.head){
-            <th>@header</th>
+            <th>@report.head.head</th>
+            @for(header <- report.head.tail){
+                <th><a href="@routes.Event.assignments(header.split('|')(1).toInt)">@{header.split('|')(0)}</a></th>
             }
         </tr>
         </thead>

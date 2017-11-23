@@ -93,8 +93,8 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     val eqp = eq.drop(MAXPERPAGE * (page.getOrElse(1) - 1)).take(MAXPERPAGE)
 
     val eaq = (for {
-      e <- eqp
-      ea <- eventAgendaItemsTable if ea.eventId === e.id
+      (e,ea) <- eqp join eventAgendaItemsTable on (_.id === _.eventId)
+      //ea <- eventAgendaItemsTable if ea.eventId === e.id
     //eac <- eventAgendaItemContactsTable if eac.eventId === ea.eventId && eac.id === ea.id
     //c <- contactsTable if eac.contactId === eac.contactId
     } yield ea) sortBy {
@@ -127,17 +127,19 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
           }
         }
 
-        val atids = ea.sortBy(_.id).map { ea => ea.id -> ea.agendaTypeId }.distinct
+        val atids = ea.sortBy(_.id).map { ea => ea.agendaTypeId -> ea.id }.distinct.groupBy(_._1).map( atids => atids._1 -> atids._2.map(_._2))
         val events = e.sortBy(_.date.getTime * -1)
 
-        val header = et.headOption.map(_.name).getOrElse("-") +: events.map(_.date.toString)
-        val result = header +: atids.map { case (eaid, atid) =>
-          at.find(_.id == atid).map(_.name).getOrElse("-") +: events.map { e =>
-            ea.find { ea => ea.eventId == e.id && ea.agendaTypeId == atid && ea.id == eaid }.map { ea =>
-              eac.find { case (eac, c) => eac._1 == ea.id && eac._2 == ea.eventId }.map(_._2).getOrElse("-")
-            }.getOrElse("-")
+        val header = et.headOption.map(h => s"${h.name}").getOrElse("-") +: events.map(e => s"${e.date}|${e.id}")
+        val atiditems = atids.map { case (atid, eaid) =>
+          val agendaName = at.find(_.id == atid).map(at => s"${at.name}").getOrElse("-")
+          agendaName +: events.map { e =>
+              ea.filter { ea => ea.eventId == e.id && ea.agendaTypeId == atid && eaid.contains(ea.id)}.map { ea =>
+                eac.find { case (eac, c) => eac._1 == ea.id && eac._2 == ea.eventId }.map(ea => s"${ea._2}").getOrElse("")
+            }.mkString(", ")
           }
         }
+        val result = header +: atiditems.toSeq.sortBy(_.head)
         val total = (etot.length/MAXPERPAGE + (if (etot.length % MAXPERPAGE > 0) 1 else 0)).toInt
         //println(s"Length: ${etot.length}, MaxPerPage: $MAXPERPAGE, total: $total")
         (result,total)
