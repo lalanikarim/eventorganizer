@@ -1,12 +1,13 @@
-@(agendaType: String,report: Seq[(String,String,String,String)],from: java.sql.Date, to: java.sql.Date, agendaTypeId: Int, page: Int, total: Int)
+@(agendaType: String,report: Seq[(String,String,String,String,String)],from: java.sql.Date, to: java.sql.Date, agendaTypeId: Int, eventTypeId: Option[Int], locationId:Option[Int], page: Int, total: Int)
 <div class="row">
     <h2>Agenda Type Report: @agendaType</h2>
-    @views.html.reports.pager(routes.Report.getAgendaTypeReportGet(agendaTypeId,from.getTime,to.getTime,None).url,total,page)
+    @views.html.reports.pager(routes.Report.getAgendaTypeReportGet(agendaTypeId,from.getTime,to.getTime,None,eventTypeId, locationId).url,total,page)
     <table class="table table-condensed">
         <thead>
         <tr>
             <th>Date</th>
             <th>Event</th>
+            <th>Location</th>
             <th>Name</th>
         </tr>
         </thead>
@@ -15,7 +16,8 @@
         <tr>
             <td>@{row._2}</td>
             <td>@{row._1}</td>
-            <td>@{row._3} @{row._4}</td>
+            <td>@{row._3}</td>
+            <td>@{row._4} @{row._5}</td>
         </tr>
         }
         </tbody>

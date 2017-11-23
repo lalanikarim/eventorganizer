@@ -23,6 +23,7 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
   import Events._
   import Agenda._
   import Contacts._
+  import Locations._
   import config.db
   import config.driver.api._
 
@@ -32,9 +33,12 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     for {
       eventTypes <- db.run(eventTypesTable.sortBy(_.name).result)
       agendaTypes <- db.run(agendaTypesTable.sortBy(_.name).result)
+      locations <- db.run(locationsTable.sortBy(_.name).result)
     } yield {
 
-      Ok(views.html.index("Report Home")(views.html.reports.home(eventTypes,agendaTypes)))
+      Ok(views.html.index("Report Home")(
+        views.html.reports.home(eventTypes,agendaTypes,locations)
+      ))
     }
   }
 
@@ -146,49 +150,45 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     }
   }
 
-  def getAgendaTypeReport(page: Option[Int]) = Action.async { implicit request =>
+  def getAgendaTypeReport(page: Option[Int]) = Action { implicit request =>
 
     implicit val loggedInUser = SessionUtils.getLoggedInUser
     val form = Form(
       tuple(
         "agendaTypeId" -> number,
         "from" -> date("MM-dd-yyyy"),
-        "to" -> date("MM-dd-yyyy")
+        "to" -> date("MM-dd-yyyy"),
+        "eventTypeId" -> optional(number),
+        "locationId" -> optional(number)
       )
     )
 
     form.bindFromRequest.fold(
-      hasErrors => Future successful BadRequest(hasErrors.errors.map(_.message).mkString(", ")),
+      hasErrors => BadRequest(hasErrors.errors.map(_.message).mkString(", ")),
       form => {
-        val (agendaTypeId, f,t) = form
-        val from = new Date(f.getTime)
-        val to = new Date(t.getTime)
+        val (agendaTypeId, f,t,eventTypeId, locationId) = form
+        val from = f.getTime
+        val to = t.getTime
 
-        for {
-          (result,total) <- getAgendaTypeReportImpl(agendaTypeId, from, to, page)
-          agendaType <- db.run(agendaTypesTable.filter(_.id === agendaTypeId).result)
-        } yield {
-          val at = agendaType.headOption.map(_.name).getOrElse("")
-          Ok(views.html.index("Agenda Type Report")(views.html.reports.agendatype(at,result,from,to,agendaTypeId,page.getOrElse(1),total)))
-        }
+        Redirect(routes.Report.getAgendaTypeReportGet(agendaTypeId,from,to,page,eventTypeId,locationId))
       }
     )
   }
 
-  def getAgendaTypeReportGet(agendaTypeId: Int, fromInt: Long, toInt: Long, page: Option[Int]) = Action.async { implicit request =>
+  def getAgendaTypeReportGet(agendaTypeId: Int, fromInt: Long, toInt: Long, page: Option[Int], eventTypeId: Option[Int], locationId: Option[Int]) = Action.async { implicit request =>
     implicit val loggedInUser = SessionUtils.getLoggedInUser
     val (from, to) = (new Date(fromInt),new Date(toInt))
 
     for {
-      (result,total) <- getAgendaTypeReportImpl(agendaTypeId, from, to, page)
+      (result,total) <- getAgendaTypeReportImpl(agendaTypeId, from, to, page, eventTypeId, locationId)
       agendaType <- db.run(agendaTypesTable.filter(_.id === agendaTypeId).result)
     } yield {
       val at = agendaType.headOption.map(_.name).getOrElse("")
-      Ok(views.html.index("Agenda Type Report")(views.html.reports.agendatype(at,result,from,to,agendaTypeId,page.getOrElse(1),total)))
+      Ok(views.html.index("Agenda Type Report")(views.html.reports.agendatype(at,result,from,to,agendaTypeId,eventTypeId, locationId, page.getOrElse(1),total)))
     }
   }
 
-  def getAgendaTypeReportImpl(agendaTypeId: Int, from: Date, to: Date, page: Option[Int]) = {
+  def getAgendaTypeReportImpl(agendaTypeId: Int, from: Date, to: Date, page: Option[Int], eventTypeId: Option[Int], locationId: Option[Int]) = {
 
     val MAXPERPAGE = 20
 
@@ -198,22 +198,33 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     //calendar.set(year + 1, 0, 1, 0, 0)
     val lastDate = to //new Date(calendar.getTime.getTime)
 
+    val etq = eventTypeId.map(etid => eventsTable.filter(_.eventTypeId === etid)).getOrElse(eventsTable)
+    val etlq = locationId.map(lid => etq.filter(_.locationId === lid)).getOrElse(etq)
+
     val q = for {
-      (((e,ea),eac),c) <- eventsTable.filter(e => e.date >= firstDate && e.date < lastDate) join
-        eventAgendaItemsTable on ((e,ea) => e.id === ea.eventId && ea.agendaTypeId === agendaTypeId) join
-        eventAgendaItemContactsTable on ((eea,eac) => eea._2.id === eac.id && eea._2.eventId === eac.eventId) join
-        contactsTable on ((eeaeac,c) => eeaeac._2.contactId === c.id) sortBy(eeaeacc => {
-        val (((e,ea),eac),c) = eeaeacc
-        (e.date,e.name,c.givenName,c.lastName)
+      ((((e,l),ea),eac),c) <-
+        etlq.filter(e => e.date >= firstDate && e.date < lastDate) join
+        locationsTable on ((e,l) => e.locationId === l.id) join
+        eventAgendaItemsTable on ((el,ea) => el._1.id === ea.eventId && ea.agendaTypeId === agendaTypeId) join
+        eventAgendaItemContactsTable on ((elea,eac) => elea._2.id === eac.id && elea._2.eventId === eac.eventId) join
+        contactsTable on ((eleaeac,c) => eleaeac._2.contactId === c.id) sortBy(eleaeacc => {
+        val ((((e,l),ea),eac),c) = eleaeacc
+        (e.date,e.name,l.name,c.givenName,c.lastName)
       })
+      /*e <- etlq
+      l <- locationsTable
+      ea <- eventAgendaItemsTable
+      eac <- eventAgendaItemContactsTable
+      c <- contactsTable if e.locationId === l.id && e.id === ea.eventId && ea.agendaTypeId === agendaTypeId && ea.id === eac.id &&
+        eac.contactId === c.id && eac.eventId === ea.eventId*/
     } yield {
-      (e.name,e.date,c.givenName,c.lastName)
+      (e.name,e.date,l.name, c.givenName,c.lastName)
     }
 
     //System.out.println(q.result.statements.mkString)
     db.run(q.distinct.result).map { r =>
 
-      val result = r.drop(MAXPERPAGE * (page.getOrElse(1) - 1)).take(MAXPERPAGE).map(r => (r._1,r._2.toString,r._3,r._4))
+      val result = r.drop(MAXPERPAGE * (page.getOrElse(1) - 1)).take(MAXPERPAGE).map(r => (r._1,r._2.toString,r._3,r._4,r._5))
       val total = (r.length/MAXPERPAGE + (if (r.length % MAXPERPAGE > 0) 1 else 0)).toInt
       (result,total)
     }
