@@ -17,14 +17,8 @@
         <tr>
             <td>@u.email</td>
             <td>@u.givenName @u.lastName</td>
-            <td>@{
-                val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy hh:mm:ss aa")
-                sdf format u.lastLogin
-                }</td>
-            <td>@{
-                val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy hh:mm:ss aa")
-                sdf format u.lastAttempt
-                }</td>
+            <td>@controllers.Utility.formatDateTime(u.lastLogin)</td>
+            <td>@controllers.Utility.formatDateTime(u.lastAttempt)</td>
             <td>@u.failedAttempts</td>
             <td>
                 @if(userId != u.email) {

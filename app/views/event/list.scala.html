@@ -36,10 +36,7 @@
         <tbody>
             @for((event,location, count) <- events){
             <tr>
-                <td>@{
-                    val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
-                    sdf format event.date
-                    }</td>
+                <td>@controllers.Utility.formatDate(event.date)</td>
                 <td>@event.name</td>
                 <td>@location.name</td>
                 <td>

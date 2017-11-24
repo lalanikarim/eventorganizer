@@ -146,7 +146,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
     Ok(views.html.login.login(""))
   }
 
-  private val now = new java.sql.Timestamp((new java.util.Date).getTime)
+  private def now = new java.sql.Timestamp((new java.util.Date).getTime)
 
   def login = Action.async { implicit request =>
     val form = Form(
@@ -160,8 +160,8 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
     val maxFailedAttempts = "Account locked due to exceeding maximum failed attempts."
 
     form.bindFromRequest.fold(
-    hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
-    loginForm => {
+      hasErrors => Future successful BadRequest(hasErrors.errors.mkString(", ")),
+      loginForm => {
         val (email,password) = loginForm
         val uq = for { u <- usersTable.filter(u => u.email === email && u.failedAttempts < 2 &&
           u.password === PasswordUtils.getHash(password)) } yield u
@@ -182,7 +182,7 @@ class Application @Inject() (dao: DatabaseAO, configuration: play.api.Configurat
                   uuq.update(
                     user.map(_ => active).getOrElse(active && failedAttempts < 2),
                     user.map(_ => now).getOrElse(lastLogin),
-                    now,
+                    user.map(_ => lastAttempt).getOrElse(now),
                     user.map(_ => 0).getOrElse(failedAttempts + 1)
                   )
                 ),5 seconds)

@@ -10,8 +10,7 @@
                 <label>Name:</label><input class="form-control" name="name" value="@event.name">
             </div>
             <div class="form-group">
-                <label>Date:</label><input class="form-control form-datetime" readonly name="date" value='@{val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
-                sdf format event.date}'>
+                <label>Date:</label><input class="form-control form-datetime" readonly name="date" value='@controllers.Utility.formatDate(event.date)'>
             </div>
             <div class="form-group">
                 <label>Event Type:</label>

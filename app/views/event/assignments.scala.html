@@ -8,10 +8,7 @@
             <dt>Event</dt>
             <dd><a href="@routes.Event.get(event.id)"><strong>@event.name</strong></a></dd>
             <dt>Date</dt>
-            <dd>@{
-                val sdf = new java.text.SimpleDateFormat("MM-dd-yyyy")
-                sdf format event.date
-                }</dd>
+            <dd>@controllers.Utility.formatDate(event.date)</dd>
             <dt>Event Type</dt>
             <dd>@eventType.name</dd>
         </dl>

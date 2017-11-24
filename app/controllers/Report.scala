@@ -26,6 +26,7 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
   import Locations._
   import config.db
   import config.driver.api._
+  import Utility.formatDate
 
   def index = Action.async { implicit request =>
     implicit val loggedInUser = SessionUtils.getLoggedInUser
@@ -134,7 +135,7 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
         val atids = ea.sortBy(_.id).map { ea => ea.agendaTypeId -> ea.id }.distinct.groupBy(_._1).map( atids => atids._1 -> atids._2.map(_._2))
         val events = e.sortBy(_.date.getTime * -1)
 
-        val header = et.headOption.map(h => s"${h.name}").getOrElse("-") +: events.map(e => s"${e.date}|${e.id}")
+        val header = et.headOption.map(h => s"${h.name}").getOrElse("-") +: events.map(e => s"${formatDate(e.date)}|${e.id}")
         val atiditems = atids.map { case (atid, eaid) =>
           val agendaName = at.find(_.id == atid).map(at => s"${at.name}").getOrElse("-")
           agendaName +: events.map { e =>
@@ -211,12 +212,6 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
         val ((((e,l),ea),eac),c) = eleaeacc
         (e.date,e.name,l.name,c.givenName,c.lastName)
       })
-      /*e <- etlq
-      l <- locationsTable
-      ea <- eventAgendaItemsTable
-      eac <- eventAgendaItemContactsTable
-      c <- contactsTable if e.locationId === l.id && e.id === ea.eventId && ea.agendaTypeId === agendaTypeId && ea.id === eac.id &&
-        eac.contactId === c.id && eac.eventId === ea.eventId*/
     } yield {
       (e.name,e.date,l.name, c.givenName,c.lastName)
     }
@@ -224,7 +219,7 @@ class Report @Inject() (dao: DatabaseAO) extends Controller {
     //System.out.println(q.result.statements.mkString)
     db.run(q.distinct.result).map { r =>
 
-      val result = r.drop(MAXPERPAGE * (page.getOrElse(1) - 1)).take(MAXPERPAGE).map(r => (r._1,r._2.toString,r._3,r._4,r._5))
+      val result = r.drop(MAXPERPAGE * (page.getOrElse(1) - 1)).take(MAXPERPAGE).map(r => (r._1,formatDate(r._2),r._3,r._4,r._5))
       val total = (r.length/MAXPERPAGE + (if (r.length % MAXPERPAGE > 0) 1 else 0)).toInt
       (result,total)
     }
