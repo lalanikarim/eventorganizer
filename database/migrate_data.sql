@@ -1,0 +1,11 @@
+insert into users (id,name,email,password,isAdmin) (select id,concat(givenName,' ',lastName),email,password,isAdmin from USERS);
+insert into locations (id, name) (select id, name from LOCATIONS);
+insert into contacts (id,givenName,lastName,groupId,sex,category,notes) (SELECT id,givenName,lastName,groupId,sex,category,notes from CONTACTS);
+insert into event_types (id,name) (select id, name from EVENTTYPES);
+insert into agenda_types (id,name,parent) (select id,name,parent from AGENDATYPES where parent is null);
+insert into agenda_types (id,name,parent) (select id,name,parent from AGENDATYPES where parent is not null);
+insert into event_type_agendas (id,eventTypeId,agendaTypeId) (select id,eventTypeId,agendaTypeId from EVENTTYPEAGENDA);
+insert into events (id, eventTypeId, date, locationId, name, state) (select id, eventTypeId, date, locationId, name, state from EVENTS);
+insert into event_agenda_items (id,eventId,agendaTypeId,prenotes) (select id,eventId,agendaTypeId,prenotes from EVENTAGENDAITEMS);
+insert into event_agenda_item_contacts (id, eventId, contactId, userId,postnotes) (select id, eventId, contactId, userId,postnotes from EVENTAGENDAITEMCONTACTS);
+insert into contact_preferences (contactId,agendaTypeId,prefer) (select contactId,agendaTypeId,prefer from CONTACTPREFERENCES);
