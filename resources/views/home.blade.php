@@ -3,9 +3,9 @@
 @section('content')
 <div class="container">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-lg-6">
             <div>
-                <div class="card">
+                <div class="card bottom-buffer">
                     <div class="card-body">
                         <h5 class="card-title">Events</h5>
                     @if (session('status'))
@@ -20,9 +20,9 @@
             </div>
         </div>
 
-        <div class="col-md-6">
+        <div class="col-lg-6">
             <div>
-                <div class="card">
+                <div class="card bottom-buffer">
                     <div class="card-body">
                         <h5 class="card-title">By Category</h5>
                         <table class="table">
@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <div class="card top-buffer">
+                <div class="card bottom-buffer">
                     <div class="card-body">
                         <h5 class="card-title">By Gender</h5>
                         <table class="table">
@@ -92,7 +92,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="card top-buffer">
+                <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">By Group</h5>
                         <table class="table">
