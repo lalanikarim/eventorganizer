@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  db:
+    image: docker.io/mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: eventsorganizer
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+    volumes:
+      - ../EventsOrganizerSandbox/db:/var/lib/mysql
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+  adminer:
+    image: docker.io/adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+  web:
+    build: .
+    environment:
+      SECRET: ${SECRET}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_URL: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}?autoReconnect=true&useSSL=false
+    volumes:
+      - ../EventsOrganizerSandbox/web/sbt:/root/.sbt:rw
+      - ../EventsOrganizerSandbox/web/ivy2:/root/.ivy2:rw
+    ports:
+      - "9000:9000"
+    depends_on:
+      - db
+
+
