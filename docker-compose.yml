@@ -33,6 +33,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       DB_URL: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}?autoReconnect=true&useSSL=false
     volumes:
+      - .:/app:rw
       - ../EventsOrganizerSandbox/web/sbt:/root/.sbt:rw
       - ../EventsOrganizerSandbox/web/ivy2:/root/.ivy2:rw
     ports:

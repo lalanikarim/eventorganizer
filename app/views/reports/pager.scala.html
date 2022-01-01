@@ -1,36 +1,76 @@
 @(link: String,total: Int,page: Int)
-<div class="col-md-8">
-    <nav>
-        <ul class="pagination" style="margin:0">
-            <li>
-                <a href='@if(page > 1) {
-                @{s"$link${if(link.contains("?"))"&" else "?"}page=${page-1}"}
-                } else {
-                #
-                }' aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            @for(p <- 1 to total) {
-            <li
-                    @if(page == p) {
-                    class="active"
+@if(total > 1) {
+    <div class="container">
+        <div style="margin: 0 auto">
+            <ul class="pagination" style="margin: 0">
+                <li
+                    @if(page == 1) {
+                        class="active"
+                        }
+                >
+                    <a href='@if(page > 1) {
+                        @{
+                            s"$link${if(link.contains("?")) "&" else "?"}page=1"
+                        }
+                    } else {
+                        #
+                    }' aria-label="First">
+                        <span aria-hidden="true">1</span>
+                    </a>
+                </li>
+                @if(page > 7) {
+                    <li>
+                        <a href='
+                            @{
+                                s"$link${if(link.contains("?")) "&" else "?"}page=${page - 1}"
+                            }
+                        ' aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                }
+                @for(p <- page - 5 to page + 5) {
+                    @if(p > 1 && p < total) {
+                        <li
+                            @if(page == p) {
+                                class="active"
+                                }
+                        ><a href="@if(page != p) {
+                            @{
+                                s"$link${if(link.contains("?")) "&" else "?"}page=$p"
+                            }
+                        } else {
+                            #
+                        }">@p</a></li>
                     }
-            ><a href="@if(page != p) {
-                @{s"$link${if(link.contains("?"))"&" else "?"}page=$p"}
-                } else {
-                #
-                }">@p</a></li>
-            }
-            <li>
-                <a href='@if(page < total) {
-                    @{s"$link${if(link.contains("?"))"&" else "?"}page=${page+1}"}
-                } else {
-                #
-                }' aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</div>
+                }
+                @if(page + 7 < total) {
+                    <li>
+                        <a href='
+                            @{
+                                s"$link${if(link.contains("?")) "&" else "?"}page=${page + 1}"
+                            }
+                        ' aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                }
+                <li
+                    @if(page == total) {
+                        class="active"
+                        }
+                >
+                    <a href='@if(page < total) {
+                        @{
+                            s"$link${if(link.contains("?")) "&" else "?"}page=$total"
+                        }
+                    } else {
+                        #
+                    }' aria-label="Last">
+                        <span aria-hidden="true">@{s"$total"}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+}

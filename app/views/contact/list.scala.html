@@ -3,7 +3,9 @@
     <h4><div class="col-md-4 col-sm-12">Contacts <a href="#addcontact" class="btn btn-primary btn-sm pull-right">Add Contact</a></div></h4>
 </div>
 @views.html.contact.contactsearch(search)
-@views.html.contact.contactpager(search,page,total)
+@if(total > 1) {
+    @views.html.reports.pager(routes.Contact.index(search, None).url, total, page)
+}
 <div class="row">
     <table class="table">
         <thead>
@@ -44,4 +46,6 @@
         </tbody>
     </table>
 </div>
-@views.html.contact.contactpager(search,page,total)
+@if(total > 1) {
+    @views.html.reports.pager(routes.Contact.index(search, None).url, total, page)
+}

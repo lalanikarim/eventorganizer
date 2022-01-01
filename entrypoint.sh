@@ -1,3 +1,3 @@
 #!/bin/bash
 cd /app
-~/sbt/bin/sbt run
+~/sbt/bin/sbt ~run
