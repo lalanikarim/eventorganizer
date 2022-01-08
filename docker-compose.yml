@@ -16,7 +16,8 @@ services:
       - "3306:3306"
       - "33060:33060"
   web:
-    build: .
+    build: 
+      context: ./docker/alpine
     environment:
       SECRET: ${SECRET}
       DB_HOST: ${DB_HOST}
