@@ -15,13 +15,6 @@ services:
     ports:
       - "3306:3306"
       - "33060:33060"
-  adminer:
-    image: docker.io/adminer
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
   web:
     build: .
     environment:
